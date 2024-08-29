@@ -1,0 +1,18 @@
+\babel@toc {english}{}\relax 
+\babel@toc {english}{}\relax 
+\contentsline {chapter}{\nonumberline Abstract}{VII}{section*.7}%
+\babel@toc {ngerman}{}\relax 
+\contentsline {chapter}{\nonumberline Zusammenfassung}{VII}{section*.8}%
+\babel@toc {english}{}\relax 
+\contentsline {chapter}{\nonumberline Symbols and Acronyms}{XI}{chapter*.10}%
+\contentsline {chapter}{List of Figures}{XIII}{chapter*.10}%
+\contentsline {chapter}{List of Tables}{XV}{chapter*.11}%
+\contentsline {chapter}{\numberline {1}Introduction}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Motivation}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Goal}{1}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Structure of the Work}{1}{section.1.3}%
+\contentsline {chapter}{\numberline {2}Conclusion and Further Work}{3}{chapter.2}%
+\contentsline {chapter}{\numberline {A}Appendix I}{5}{appendix.A}%
+\contentsline {chapter}{\numberline {B}Appendix II}{7}{appendix.B}%
+\contentsline {chapter}{\nonumberline Acknowledgement}{9}{chapter*.13}%
+\providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

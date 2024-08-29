@@ -1,0 +1,67 @@
+\documentclass[%
+	mainlanguage=english
+	% mainlanguage=ngerman,
+]{scadsai-report-template}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Basic information
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Title
+\Title{Reinforcement Learning for Portfolio
+	Management: A Comparative
+	Analysis of DQN, PPO, and Advantage
+	Actor-Critic}
+% Authour name: Firstname Lastname
+\Author{Qaribiyan Qader}  
+% Date of birth: DD.MM.YYYY
+\DateOfBirth{06.05.1991} 
+% Place of birth
+\PlaceOfBirth{Dresden, Germany} 
+% Matriculation number
+\MatriculationNumber{5128979}
+% Matriculation year: YYYY
+\MatriculationYear{2022}
+% Course
+\Course{Computational Modelling and Simulation (CMS)}
+% Report type: For more possible values, check readme.md of the report repository
+\ReportType{master}
+% Graduation: \Graduation{shortname}{longname}
+\Graduation{M.Sc.}{Master of Science}
+% Reviewers
+\Reviewers{Prof. Dr. Wolfgang E. Nagel \and Prof. Dr.-Ing. Roberto Calandra}
+% Supervisors: Seperated by '\and'
+\Supervisors{Dr. Iryna Okhrin}
+% Date of starting work: DD.MM.YYYY
+\StartDate{23.08.2024}
+% Date of submission: DD.MM.YYYY
+\SubmissionDate{28.01.2025}
+
+\begin{document}
+	\input{customizations} % to import custom libraries or define your own functions	
+
+	\makefrontmatter
+    \input{0_frontmatter/1_task}		% task description
+	\input{0_frontmatter/2_declaration}	% declaration of authorship
+	\input{0_frontmatter/3_abstract}
+	
+	
+	\tableofcontents
+	\input{0_frontmatter/4_acronyms_figures_tables}	% opt. Abkürzungsverzeichnis (bzw. Symbol-/Formel-Verzeichnis)
+	
+	\mainmatter
+	\input{1_mainmatter/introduction}
+	% background,
+	% related work,
+	% results, etc...
+	\input{1_mainmatter/conclusion_and_future_work}
+	
+	\input{2_bib/0_bibliography} 		% Literatur
+	
+	\appendix							% (alphabetic numbering)
+	\input{3_appendix/0_appendix}
+
+	\backmatter
+  	\chapter{Acknowledgement}
+
+\end{document}
+
