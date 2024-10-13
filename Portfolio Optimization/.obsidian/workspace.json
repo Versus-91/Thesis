@@ -1,0 +1,194 @@
+{
+  "main": {
+    "id": "3f44d80b3e707a29",
+    "type": "split",
+    "children": [
+      {
+        "id": "096d3abeb261506c",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "a42ae436c4bd1181",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Mean Variance Optimization.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "2996078f6dca3dbc",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Mean Variance Optimization.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "37425b86df266856",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Reinforcement Learning.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          }
+        ],
+        "currentTab": 2
+      },
+      {
+        "id": "aa21276d1256d6b0",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6ca6c91a408ca38a",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "9a2395199057d02f",
+    "type": "split",
+    "children": [
+      {
+        "id": "2cacef7996864770",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "fb927e80c59ac5b3",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "c032aa577d31dacb",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "9cacf9f7aad25419",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "6f92b1c3898487b6",
+    "type": "split",
+    "children": [
+      {
+        "id": "df18820602dd4bb1",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "9705d304c6345ba5",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "55df0798891c2de1",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "ab86882ac3114741",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "c00db58d7a31bbb6",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false
+    }
+  },
+  "active": "fb927e80c59ac5b3",
+  "lastOpenFiles": [
+    "Reinforcement Learning.md",
+    "Portfolio Optimization with Reinforcement Learning.md",
+    "Mean Variance Optimization.md",
+    "Pasted image 20241013133332.png",
+    "Background.md",
+    "black-litterman Optimization.md",
+    "Black-litterman.md"
+  ]
+}
