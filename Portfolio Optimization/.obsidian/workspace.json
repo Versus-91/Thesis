@@ -4,61 +4,70 @@
     "type": "split",
     "children": [
       {
-        "id": "096d3abeb261506c",
-        "type": "tabs",
+        "id": "76eed0982000eacc",
+        "type": "split",
         "children": [
           {
-            "id": "a42ae436c4bd1181",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Mean Variance Optimization.md",
-                "mode": "source",
-                "source": false
+            "id": "aa21276d1256d6b0",
+            "type": "tabs",
+            "dimension": 55.88235294117647,
+            "children": [
+              {
+                "id": "6ca6c91a408ca38a",
+                "type": "leaf",
+                "state": {
+                  "type": "markdown",
+                  "state": {
+                    "file": "Metrics.md",
+                    "mode": "source",
+                    "source": false
+                  }
+                }
+              },
+              {
+                "id": "50ae727f83ca1a33",
+                "type": "leaf",
+                "state": {
+                  "type": "markdown",
+                  "state": {
+                    "file": "Metrics.md",
+                    "mode": "source",
+                    "source": false
+                  }
+                }
+              },
+              {
+                "id": "f815886fe7efbcf0",
+                "type": "leaf",
+                "state": {
+                  "type": "markdown",
+                  "state": {
+                    "file": "Sharp ratio.md",
+                    "mode": "source",
+                    "source": false
+                  }
+                }
               }
-            }
+            ],
+            "currentTab": 2
           },
           {
-            "id": "2996078f6dca3dbc",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Mean Variance Optimization.md",
-                "mode": "source",
-                "source": false
+            "id": "7f6451e0d3efda4d",
+            "type": "tabs",
+            "dimension": 44.11764705882353,
+            "children": [
+              {
+                "id": "76a6c20fcbe54dd5",
+                "type": "leaf",
+                "state": {
+                  "type": "graph",
+                  "state": {}
+                }
               }
-            }
-          },
-          {
-            "id": "37425b86df266856",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Reinforcement Learning.md",
-                "mode": "source",
-                "source": false
-              }
-            }
+            ]
           }
         ],
-        "currentTab": 2
-      },
-      {
-        "id": "aa21276d1256d6b0",
-        "type": "tabs",
-        "children": [
-          {
-            "id": "6ca6c91a408ca38a",
-            "type": "leaf",
-            "state": {
-              "type": "graph",
-              "state": {}
-            }
-          }
-        ]
+        "direction": "horizontal"
       }
     ],
     "direction": "vertical"
@@ -181,14 +190,19 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "fb927e80c59ac5b3",
+  "active": "76a6c20fcbe54dd5",
   "lastOpenFiles": [
-    "Reinforcement Learning.md",
-    "Portfolio Optimization with Reinforcement Learning.md",
+    "Sharp ratio.md",
+    "Metrics.md",
+    "Quantitative analysis.md",
+    "Untitled",
+    "Pasted image 20241013135857.png",
     "Mean Variance Optimization.md",
-    "Pasted image 20241013133332.png",
-    "Background.md",
     "black-litterman Optimization.md",
+    "Pasted image 20241013133332.png",
+    "Portfolio Optimization with Reinforcement Learning.md",
+    "Reinforcement Learning.md",
+    "Background.md",
     "Black-litterman.md"
   ]
 }
