@@ -1,87 +1,35 @@
 {
   "main": {
-    "id": "3f44d80b3e707a29",
+    "id": "016a6b12730dd9d9",
     "type": "split",
     "children": [
       {
-        "id": "76eed0982000eacc",
-        "type": "split",
+        "id": "eb87ee85ce9cc3c4",
+        "type": "tabs",
         "children": [
           {
-            "id": "aa21276d1256d6b0",
-            "type": "tabs",
-            "dimension": 55.88235294117647,
-            "children": [
-              {
-                "id": "6ca6c91a408ca38a",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "Metrics.md",
-                    "mode": "source",
-                    "source": false
-                  }
-                }
-              },
-              {
-                "id": "50ae727f83ca1a33",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "Metrics.md",
-                    "mode": "source",
-                    "source": false
-                  }
-                }
-              },
-              {
-                "id": "f815886fe7efbcf0",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "Sharp ratio.md",
-                    "mode": "source",
-                    "source": false
-                  }
-                }
-              }
-            ],
-            "currentTab": 2
-          },
-          {
-            "id": "7f6451e0d3efda4d",
-            "type": "tabs",
-            "dimension": 44.11764705882353,
-            "children": [
-              {
-                "id": "76a6c20fcbe54dd5",
-                "type": "leaf",
-                "state": {
-                  "type": "graph",
-                  "state": {}
-                }
-              }
-            ]
+            "id": "d12ac72d9b47718f",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {}
+            }
           }
-        ],
-        "direction": "horizontal"
+        ]
       }
     ],
     "direction": "vertical"
   },
   "left": {
-    "id": "9a2395199057d02f",
+    "id": "7a71bc9d00ef3a33",
     "type": "split",
     "children": [
       {
-        "id": "2cacef7996864770",
+        "id": "6595075982fbf7ee",
         "type": "tabs",
         "children": [
           {
-            "id": "fb927e80c59ac5b3",
+            "id": "b265f843e531307c",
             "type": "leaf",
             "state": {
               "type": "file-explorer",
@@ -91,7 +39,7 @@
             }
           },
           {
-            "id": "c032aa577d31dacb",
+            "id": "5db039c3b110d30d",
             "type": "leaf",
             "state": {
               "type": "search",
@@ -106,7 +54,7 @@
             }
           },
           {
-            "id": "9cacf9f7aad25419",
+            "id": "483dc67d67be8708",
             "type": "leaf",
             "state": {
               "type": "bookmarks",
@@ -120,15 +68,15 @@
     "width": 300
   },
   "right": {
-    "id": "6f92b1c3898487b6",
+    "id": "114cb579e411525a",
     "type": "split",
     "children": [
       {
-        "id": "df18820602dd4bb1",
+        "id": "345a247dfc40c098",
         "type": "tabs",
         "children": [
           {
-            "id": "9705d304c6345ba5",
+            "id": "041f49a8deba64ce",
             "type": "leaf",
             "state": {
               "type": "backlink",
@@ -144,7 +92,7 @@
             }
           },
           {
-            "id": "55df0798891c2de1",
+            "id": "031dbe3bc5ad25db",
             "type": "leaf",
             "state": {
               "type": "outgoing-link",
@@ -155,7 +103,7 @@
             }
           },
           {
-            "id": "ab86882ac3114741",
+            "id": "4292d242a89cde21",
             "type": "leaf",
             "state": {
               "type": "tag",
@@ -166,7 +114,7 @@
             }
           },
           {
-            "id": "c00db58d7a31bbb6",
+            "id": "27f4334b2af6ad68",
             "type": "leaf",
             "state": {
               "type": "outline",
@@ -190,19 +138,6 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "76a6c20fcbe54dd5",
-  "lastOpenFiles": [
-    "Sharp ratio.md",
-    "Metrics.md",
-    "Quantitative analysis.md",
-    "Untitled",
-    "Pasted image 20241013135857.png",
-    "Mean Variance Optimization.md",
-    "black-litterman Optimization.md",
-    "Pasted image 20241013133332.png",
-    "Portfolio Optimization with Reinforcement Learning.md",
-    "Reinforcement Learning.md",
-    "Background.md",
-    "Black-litterman.md"
-  ]
+  "active": "d12ac72d9b47718f",
+  "lastOpenFiles": []
 }
