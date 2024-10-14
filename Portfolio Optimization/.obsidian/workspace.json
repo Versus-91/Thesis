@@ -4,70 +4,42 @@
     "type": "split",
     "children": [
       {
-        "id": "76eed0982000eacc",
-        "type": "split",
+        "id": "aa21276d1256d6b0",
+        "type": "tabs",
         "children": [
           {
-            "id": "aa21276d1256d6b0",
-            "type": "tabs",
-            "dimension": 55.88235294117647,
-            "children": [
-              {
-                "id": "6ca6c91a408ca38a",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "Metrics.md",
-                    "mode": "source",
-                    "source": false
-                  }
-                }
-              },
-              {
-                "id": "50ae727f83ca1a33",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "Metrics.md",
-                    "mode": "source",
-                    "source": false
-                  }
-                }
-              },
-              {
-                "id": "f815886fe7efbcf0",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "Sharp ratio.md",
-                    "mode": "source",
-                    "source": false
-                  }
-                }
-              }
-            ],
-            "currentTab": 2
+            "id": "f815886fe7efbcf0",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {}
+            }
           },
           {
-            "id": "7f6451e0d3efda4d",
-            "type": "tabs",
-            "dimension": 44.11764705882353,
-            "children": [
-              {
-                "id": "76a6c20fcbe54dd5",
-                "type": "leaf",
-                "state": {
-                  "type": "graph",
-                  "state": {}
-                }
+            "id": "9de91dac27c52628",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Buy and Hold.md",
+                "mode": "source",
+                "source": false
               }
-            ]
+            }
+          },
+          {
+            "id": "816cc3b7d8794fe7",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Can we still beat buy and hold for individual stocks.md",
+                "mode": "source",
+                "source": false
+              }
+            }
           }
-        ],
-        "direction": "horizontal"
+        ]
       }
     ],
     "direction": "vertical"
@@ -190,10 +162,14 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "76a6c20fcbe54dd5",
+  "active": "f815886fe7efbcf0",
   "lastOpenFiles": [
+    "Can we still beat buy and hold for individual stocks.md",
+    "Buy and Hold.md",
     "Sharp ratio.md",
     "Metrics.md",
+    "Drowdown.md",
+    "Reinforcement Learning.md",
     "Quantitative analysis.md",
     "Untitled",
     "Pasted image 20241013135857.png",
@@ -201,7 +177,6 @@
     "black-litterman Optimization.md",
     "Pasted image 20241013133332.png",
     "Portfolio Optimization with Reinforcement Learning.md",
-    "Reinforcement Learning.md",
     "Background.md",
     "Black-litterman.md"
   ]
