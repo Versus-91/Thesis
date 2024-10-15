@@ -1,5 +1,3 @@
-"""From FinRL https://github.com/AI4Finance-LLC/FinRL/tree/master/finrl/env"""
-
 from pathlib import Path
 from stable_baselines3.common.vec_env import DummyVecEnv
 import matplotlib.pyplot as plt
@@ -242,12 +240,7 @@ class StockPortfolioEnv(gym.Env):
     def get_state_and_info_from_day(self, day):
         self.data = self.df[self.df["time"] == day]
         covs = self.data["cov_list"].values[0]
-        state = np.append(
-            np.array(covs),
-            [self.data[tech].values.tolist()
-             for tech in self.tech_indicator_list],
-            axis=0,
-        )
+        state =  np.array(covs)
         info = {
             "data": self.df[self.df.time <= day],
         }
