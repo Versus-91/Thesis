@@ -1,0 +1,3 @@
+Utility theory suggests that individuals make decisions by weighing the potential benefits and risks of different choices, aiming to maximize their overall satisfaction or "utility." When faced with risky options, people are more likely to take action if the potential reward is significant enough to justify the uncertainty or possible loss. Essentially, if the expected utility of a risky decision—calculated by considering both the probability and value of outcomes—exceeds the utility of a safer option, individuals will be inclined to pursue the risk. This principle explains how people navigate decisions in uncertain environments, balancing their appetite for risk with the potential for gain.
+
+![[Pasted image 20241107204438.png]]

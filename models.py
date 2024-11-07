@@ -5,7 +5,7 @@ import time
 
 import numpy as np
 import pandas as pd
-from stable_baselines3 import A2C, DQN
+from stable_baselines3 import A2C
 from stable_baselines3 import DDPG
 from stable_baselines3 import PPO
 from stable_baselines3 import SAC
@@ -15,12 +15,11 @@ from stable_baselines3.common.noise import NormalActionNoise
 from stable_baselines3.common.noise import OrnsteinUhlenbeckActionNoise
 from stable_baselines3.common.vec_env import DummyVecEnv
 
-import config
+from finrl import config
 from finrl.meta.env_stock_trading.env_stocktrading import StockTradingEnv
 from finrl.meta.preprocessor.preprocessors import data_split
 
-MODELS = {"a2c": A2C, "ddpg": DDPG, "td3": TD3,
-          "sac": SAC, "ppo": PPO, "dqn": DQN}
+MODELS = {"a2c": A2C, "ddpg": DDPG, "td3": TD3, "sac": SAC, "ppo": PPO}
 
 MODEL_KWARGS = {x: config.__dict__[f"{x.upper()}_PARAMS"]
                 for x in MODELS.keys()}
@@ -663,8 +662,6 @@ class DRLEnsembleAgent:
                 model_dct["ddpg"]["sharpe_list"],
                 model_dct["sac"]["sharpe_list"],
                 model_dct["td3"]["sharpe_list"],
-                model_dct["dqn"]["sharpe_list"],
-
             ]
         ).T
         df_summary.columns = [
@@ -677,7 +674,6 @@ class DRLEnsembleAgent:
             "DDPG Sharpe",
             "SAC Sharpe",
             "TD3 Sharpe",
-            "DQN_Sharpe"
         ]
 
         return df_summary

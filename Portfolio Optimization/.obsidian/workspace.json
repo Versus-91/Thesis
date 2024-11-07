@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Chapter1 - Modern Portfolio theory/Modern Portfolio Theory.md",
+                "file": "Chapter 2 - Reinforcement Learning/Literature review.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Modern Portfolio Theory"
+              "title": "Literature review"
             }
           }
         ],
@@ -179,25 +179,33 @@
   },
   "active": "4a1df36c240e9901",
   "lastOpenFiles": [
-    "Chapter1 - Modern Portfolio theory/Mean Variance Optimization.md",
+    "Pasted image 20241107210736.png",
+    "Chapter1 - Modern Portfolio theory/Utility theory & asset allocation problem.md",
+    "Chapter 2 - Reinforcement Learning/Literature review.md",
     "Chapter1 - Modern Portfolio theory/Modern Portfolio Theory.md",
+    "Chapter1 - Modern Portfolio theory/Mean Variance Optimization.md",
+    "Chapter1 - Modern Portfolio theory/black-litterman Optimization.md",
     "Can we still beat buy and hold for individual stocks.md",
-    "Drowdown.md",
-    "Metrics.md",
-    "Buy and Hold.md",
-    "black-litterman Optimization.md",
-    "Background.md",
-    "Pasted image 20241013133332.png",
-    "Untitled.md",
-    "Chapter 2 - Reinforcement Learning",
-    "Chapter1 - Modern Portfolio theory",
     "Modern Portfolio Theory.md",
-    "Sharp ratio.md",
+    "Pasted image 20241107204438.png",
+    "Methodology/Metrics/Drowdown.md",
+    "Untitled.md",
     "Reinforcement Learning.md",
     "Quantitative analysis.md",
-    "Chapter1/Untitled",
-    "Pasted image 20241013135857.png",
     "Portfolio Optimization with Reinforcement Learning.md",
+    "Methodology/Data.md",
+    "Background.md",
+    "Methodology/Metrics.md",
+    "Methodology/Evaluation/Buy and Hold.md",
+    "Methodology/Evaluation",
+    "Pasted image 20241013135857.png",
+    "Pasted image 20241013133332.png",
+    "Methodology/Metrics",
+    "Methodology",
+    "Methodology/Metrics/Sharp ratio.md",
+    "Chapter 2 - Reinforcement Learning",
+    "Chapter1 - Modern Portfolio theory",
+    "Chapter1/Untitled",
     "Black-litterman.md"
   ]
 }

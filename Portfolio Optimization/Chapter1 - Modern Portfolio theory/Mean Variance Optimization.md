@@ -15,5 +15,7 @@ Using MVO would enable users to find optimal combination of assets based on the 
 
 MVO performs well when asset returns are normally distributed, however in real world scenarios returns rarely follow normal distribution, making MVO less reliable. furthermore accurately estimating returns and covariances is challenging. using simple historical mean of returns is not able to capture complexity of financial markets and often leads to suboptimal portfolios. While there are various methods for estimating expected returns of assets, it is considered not using expected returns for portfolio optimization is ideal.
 
-**Optimal versus Naive Diversification: How Inefficient is the 1/N Portfolio Strategy?
+Paper : **Optimal versus Naive Diversification: How Inefficient is the 1/N Portfolio Strategy?
+
+
 

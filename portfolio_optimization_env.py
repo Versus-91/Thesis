@@ -458,11 +458,15 @@ class PortfolioOptimizationEnv(gym.Env):
         state = None
         for tic in self._tic_list:
             tic_data = self._data[self._data[self._tic_column] == tic]
-            tic_data = tic_data[self._features].to_numpy().T
+            tic_data = tic_data[[
+                x for x in self._features if x.strip().lower() != "close"]].to_numpy().T
             tic_data = tic_data[..., np.newaxis]
             state = tic_data if state is None else np.append(
                 state, tic_data, axis=2)
         state = state.transpose((0, 2, 1))
+        weights = self._final_weights[-1][1:].reshape(1, len(self._tic_list), 1)
+        state = np.append(state, weights, axis=0)
+        
         info = {
             "tics": self._tic_list,
             "start_time": start_time,
