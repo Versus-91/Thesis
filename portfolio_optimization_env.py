@@ -464,9 +464,9 @@ class PortfolioOptimizationEnv(gym.Env):
             state = tic_data if state is None else np.append(
                 state, tic_data, axis=2)
         state = state.transpose((0, 2, 1))
-        weights = self._final_weights[-1][1:].reshape(1, len(self._tic_list), 1)
-        state = np.append(state, weights, axis=0)
-        
+        # weights = self._final_weights[-1][1:].reshape(1, len(self._tic_list), 1)
+        # state = np.append(state, weights, axis=0)
+
         info = {
             "tics": self._tic_list,
             "start_time": start_time,
