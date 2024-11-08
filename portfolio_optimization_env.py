@@ -89,6 +89,7 @@ class PortfolioOptimizationEnv(gym.Env):
         time_window=1,
         cwd="./",
         new_gym_api=False,
+        use_sharpe=False
     ):
         """Initializes environment's instance.
 
@@ -138,6 +139,7 @@ class PortfolioOptimizationEnv(gym.Env):
         self._valuation_feature = valuation_feature
         self._cwd = Path(cwd)
         self._new_gym_api = new_gym_api
+        self._use_sharpe = use_sharpe
 
         # results file
         self._results_file = self._cwd / "results" / "rl"
@@ -354,21 +356,25 @@ class PortfolioOptimizationEnv(gym.Env):
 
             # save date memory
             self._date_memory.append(self._info["end_time"])
-
             # define portfolio return
             rate_of_return = (
                 self._asset_memory["final"][-1] /
                 self._asset_memory["final"][-2]
             )
             portfolio_return = rate_of_return - 1
-            portfolio_reward = np.log(rate_of_return)
 
             # save portfolio return memory
             self._portfolio_return_memory.append(portfolio_return)
+            if self._use_sharpe:
+                portfolio_reward = qs.stats.sharpe(
+                    pd.Series(self._portfolio_return_memory))
+            else:
+                portfolio_reward = np.log(rate_of_return)
             self._portfolio_reward_memory.append(portfolio_reward)
 
             # Define portfolio return
             self._reward = portfolio_reward
+
             self._reward = self._reward * self._reward_scaling
 
         if self._new_gym_api:
