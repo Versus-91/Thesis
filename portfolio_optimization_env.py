@@ -166,7 +166,8 @@ class PortfolioOptimizationEnv(gym.Env):
 
         # define action space
         self.action_space = spaces.Box(low=0, high=1, shape=(action_space,))
-
+        features = [x for x in self._features if x.strip(
+        ).lower() != "close" and x.strip().lower() != "low"]
         # define observation state
         if self._return_last_action:
             # if  last action must be returned, a dict observation
@@ -177,9 +178,9 @@ class PortfolioOptimizationEnv(gym.Env):
                         low=-np.inf,
                         high=np.inf,
                         shape=(
-                            len(self._features),
+                            len(features),
                             len(self._tic_list),
-                            self._time_window,
+                            self._time_window + 1,
                         ),
                     ),
                     "last_action": spaces.Box(low=0, high=1, shape=(action_space,)),
@@ -191,8 +192,8 @@ class PortfolioOptimizationEnv(gym.Env):
             self.observation_space = spaces.Box(
                 low=-np.inf,
                 high=np.inf,
-                shape=(len(self._features), len(
-                    self._tic_list), self._time_window),
+                shape=(
+                    len(features), len(self._tic_list), self._time_window + 1),
             )
 
         self._reset_memory()
@@ -462,16 +463,17 @@ class PortfolioOptimizationEnv(gym.Env):
 
         # define state to be returned
         state = None
+        features = [x for x in self._features if x.strip(
+        ).lower() != "close" and x.strip().lower() != "low"]
+
         for tic in self._tic_list:
             tic_data = self._data[self._data[self._tic_column] == tic]
-            tic_data = tic_data[[
-                x for x in self._features if x.strip().lower() != "close"]].to_numpy().T
+            tic_data = tic_data[features
+                                ].to_numpy().T
             tic_data = tic_data[..., np.newaxis]
             state = tic_data if state is None else np.append(
                 state, tic_data, axis=2)
         state = state.transpose((0, 2, 1))
-        # weights = self._final_weights[-1][1:].reshape(1, len(self._tic_list), 1)
-        # state = np.append(state, weights, axis=0)
 
         info = {
             "tics": self._tic_list,
@@ -587,6 +589,12 @@ class PortfolioOptimizationEnv(gym.Env):
         if self._return_last_action:
             return {"state": state, "last_action": last_action}
         else:
+            weights = self._final_weights[-1][1:].reshape(1, -1)
+            weights_expanded = np.expand_dims(
+                weights, axis=-1)  # Shape: (1, 7, 1)
+            # Concatenate returns and weights
+            state = np.concatenate(
+                [state, weights_expanded], axis=-1)  # Shape: (1, 7, 6)
             return state
 
     def _normalize_dataframe(self, normalize):

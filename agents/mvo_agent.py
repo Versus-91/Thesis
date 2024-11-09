@@ -4,6 +4,7 @@ import cvxpy as cp
 import numpy as np
 import pandas as pd
 from collections import defaultdict
+from pypfopt import EfficientFrontier
 
 
 class MarkowitzAgent:
@@ -52,37 +53,13 @@ class MarkowitzAgent:
         data = info["data"].copy()
         # from the data estimate returns and covariances
         cov = data.iloc[-1].cov_list
-        mean_returns = data[
-            data["time"] == data["time"].max()
-        ]["ewm_returns"].to_numpy()
-
-        # solve markowitz model with cvxpy
-        # initialize model
-        num_stocks = len(mean_returns)
-        weights = cp.Variable(num_stocks)
-        risk_free_weight = cp.Variable(1)
-        # define constraints
-        # constraints = [cp.sum(weights) + risk_free_weight ==
-        #                1, weights >= 0, risk_free_weight >= 0]
-        constraints = [cp.sum(weights) == 1,
-                       weights >= 0,
-                       #    risk_free_weight >= 0
-                       ]
-        # define objective
-        # + risk_free_weight*self.risk_free_rate
-        portfolio_return = mean_returns @ weights
-        portfolio_risk = cp.quad_form(weights, cov)
-        # define objective
-        objective = cp.Maximize(
-            portfolio_return - self.risk_aversion * portfolio_risk)
-        # define problem
-        problem = cp.Problem(objective, constraints)
-        # solve problem
-        problem.solve()
-        # get weights
-        weights = weights.value
+        mean_returns = data.iloc[-1].returns
+        ef = EfficientFrontier(mean_returns, cov, weight_bounds=(None, None))
+        ef.min_volatility()
+        weights = ef.clean_weights()
+        list_weights = list(weights.values())
         # get action. if using risk free rate then integrate it into the action
-        action = weights
+        action = list_weights
         # action = np.concatenate([weights, risk_free_weight.value])
         action = np.maximum(action, 0)
         action = action / np.sum(action)

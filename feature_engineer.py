@@ -247,7 +247,7 @@ class FeatureEngineer:
         :return: (df) pandas dataframe
         """
         df = data.copy()
-        df["daily_return"] = df.groupby('tic')['close'].pct_change()
+        df["return"] = df.groupby('tic')['close'].pct_change()
 
         return df
 
