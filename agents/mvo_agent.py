@@ -22,12 +22,16 @@ class MarkowitzAgent:
     def __init__(
             self,
             env,
+            solver = 'OSQP',
             risk_aversion=10,
+            objective='min_variance',
             annual_risk_free_rate=0.03  # disregard risk free rate since RL disregards
     ):
         super().__init__()
         self.risk_aversion = risk_aversion
         self.env = env
+        self.solver = solver
+        self.objective = objective
         # compute daily risk free rate from annual risk free rate
         # self.risk_free_rate = (1 + annual_risk_free_rate) ** (1 / 365) - 1
         # disable risk free rate for now
@@ -54,8 +58,12 @@ class MarkowitzAgent:
         # from the data estimate returns and covariances
         cov = data.iloc[-1].cov_list
         mean_returns = data.iloc[-1].returns
-        ef = EfficientFrontier(mean_returns, cov, weight_bounds=(None, None))
-        ef.min_volatility()
+        ef = EfficientFrontier(mean_returns, cov, solver=self.solver)
+        if self.objective == 'min_variance':
+            ef.min_volatility()
+        else:
+            ef.max_sharpe()
+
         weights = ef.clean_weights()
         list_weights = list(weights.values())
         # get action. if using risk free rate then integrate it into the action
