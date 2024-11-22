@@ -22,7 +22,7 @@ class MarkowitzAgent:
     def __init__(
             self,
             env,
-            solver = 'OSQP',
+            solver='OSQP',
             risk_aversion=10,
             objective='min_variance',
             annual_risk_free_rate=0.03  # disregard risk free rate since RL disregards
