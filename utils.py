@@ -76,10 +76,10 @@ def benchmark(train_data, test_data, iterations, t, features):
         'time_window': t
     }
 
-
     for i, m in enumerate(models):
         result = {}
-        train_environment = PortfolioOptimizationEnv(df=train_data, **env_kwargs)
+        train_environment = PortfolioOptimizationEnv(
+            df=train_data, **env_kwargs)
         test_environment = PortfolioOptimizationEnv(df=test_data, **env_kwargs)
         agent = DRLAgent(env=train_environment)
         model = agent.get_model(
@@ -97,6 +97,7 @@ def benchmark(train_data, test_data, iterations, t, features):
                 "portfolio_values": train_environment._asset_memory["final"],
             }
         )
+        model.save('./data/'+m['name'])
         prediction_summary = DRL_prediction(ppo_model, test_environment, t)
         result["train"] = training_summary
         result["test"] = prediction_summary
@@ -137,7 +138,7 @@ def baseline(data, INDICATORS, TEST_START_DATE, TEST_END_DATE):
 
     env_kwargs = {
         "hmax": 100,
-        "initial_amount": 1000000,
+        "initial_amount": 50_000,
         "transaction_cost_pct": 0.001,
         "state_space": state_space,
         "stock_dim": stock_dimension,

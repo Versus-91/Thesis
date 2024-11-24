@@ -25,14 +25,12 @@
             "id": "4a1df36c240e9901",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "image",
               "state": {
-                "file": "Chapter1 - Modern Portfolio theory/Portfolio.md",
-                "mode": "source",
-                "source": false
+                "file": "Pasted image 20241013133332.png"
               },
-              "icon": "lucide-file",
-              "title": "Portfolio"
+              "icon": "lucide-image",
+              "title": "Pasted image 20241013133332"
             }
           }
         ],
@@ -177,17 +175,19 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "4a1df36c240e9901",
+  "active": "fb927e80c59ac5b3",
   "lastOpenFiles": [
+    "Pasted image 20241013133332 1.png",
+    "Pasted image 20241013133332.png",
     "Chapter1 - Modern Portfolio theory/Mean Variance Optimization.md",
+    "Chapter1 - Modern Portfolio theory/Modern Portfolio Theory.md",
+    "Chapter1 - Modern Portfolio theory/black-litterman Optimization.md",
     "Chapter1 - Modern Portfolio theory/Portfolio.md",
     "Can we still beat buy and hold for individual stocks.md",
     "Modern Portfolio Theory.md",
     "Chapter 2 - Reinforcement Learning/Literature review.md",
     "Pasted image 20241107210736.png",
     "Chapter1 - Modern Portfolio theory/Utility theory & asset allocation problem.md",
-    "Chapter1 - Modern Portfolio theory/Modern Portfolio Theory.md",
-    "Chapter1 - Modern Portfolio theory/black-litterman Optimization.md",
     "Pasted image 20241107204438.png",
     "Methodology/Metrics/Drowdown.md",
     "Untitled.md",
@@ -200,7 +200,6 @@
     "Methodology/Evaluation/Buy and Hold.md",
     "Methodology/Evaluation",
     "Pasted image 20241013135857.png",
-    "Pasted image 20241013133332.png",
     "Methodology/Metrics",
     "Methodology",
     "Methodology/Metrics/Sharp ratio.md",
