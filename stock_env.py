@@ -10,7 +10,7 @@ import pandas as pd
 from gymnasium import spaces
 from gymnasium.utils import seeding
 from stable_baselines3.common.vec_env import DummyVecEnv
-
+import quantstats as qs
 matplotlib.use("Agg")
 
 # from stable_baselines3.common.logger import Logger, KVWriter, CSVOutputFormat
@@ -44,8 +44,13 @@ class StockTradingEnv(gym.Env):
         model_name="",
         mode="",
         iteration="",
+        sortino_reward=False,
+        sharpe_reward=False,
+
     ):
         self.day = day
+        self.sortino_reward = sortino_reward
+        self.sharpe_reward = sharpe_reward
         self.df = df
         self.stock_dim = stock_dim
         self.hmax = hmax
@@ -236,8 +241,7 @@ class StockTradingEnv(gym.Env):
                 + sum(
                     np.array(self.state[1: (self.stock_dim + 1)])
                     * np.array(
-                        self.state[(self.stock_dim + 1)
-                                    : (self.stock_dim * 2 + 1)]
+                        self.state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)]
                     )
                 )
                 - self.asset_memory[0]
@@ -351,9 +355,26 @@ class StockTradingEnv(gym.Env):
             )
             self.asset_memory.append(end_total_asset)
             self.date_memory.append(self._get_date())
-            self.reward = end_total_asset - begin_total_asset
-            self.rewards_memory.append(self.reward)
-            self.reward = self.reward * self.reward_scaling
+
+            try:
+                if self.sortino_reward:
+                    log_return = np.log(end_total_asset / begin_total_asset)
+                    self.rewards_memory.append(log_return)
+                    self.reward = qs.stats.sortino(
+                        pd.Series(self.rewards_memory), periods=21, annualize=False)
+                elif self.sharpe_reward:
+                    log_return = np.log(
+                        end_total_asset / begin_total_asset)
+                    self.rewards_memory.append(log_return)
+                    self.reward = qs.stats.sharpe(
+                        pd.Series(self.rewards_memory), periods=21, annualize=False)
+                else:
+                    log_return = np.log(
+                        end_total_asset / begin_total_asset)
+                    self.rewards_memory.append(log_return)
+                    self.reward = log_return
+            except e:
+              print('An exception occurred',self.rewards_memory)
             self.state_memory.append(
                 self.state
             )  # add current state in state_recorder for each step
@@ -383,8 +404,7 @@ class StockTradingEnv(gym.Env):
             previous_total_asset = self.previous_state[0] + sum(
                 np.array(self.state[1: (self.stock_dim + 1)])
                 * np.array(
-                    self.previous_state[(self.stock_dim + 1)
-                                         : (self.stock_dim * 2 + 1)]
+                    self.previous_state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)]
                 )
             )
             self.asset_memory = [previous_total_asset]
@@ -468,8 +488,7 @@ class StockTradingEnv(gym.Env):
             state = (
                 [self.state[0]]
                 + self.data.close.values.tolist()
-                + list(self.state[(self.stock_dim + 1)
-                       : (self.stock_dim * 2 + 1)])
+                + list(self.state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)])
                 + sum(
                     (
                         self.data[tech].values.tolist()
@@ -484,8 +503,7 @@ class StockTradingEnv(gym.Env):
             state = (
                 [self.state[0]]
                 + [self.data.close]
-                + list(self.state[(self.stock_dim + 1)
-                       : (self.stock_dim * 2 + 1)])
+                + list(self.state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)])
                 + sum(([self.data[tech]]
                       for tech in self.tech_indicator_list), [])
             )

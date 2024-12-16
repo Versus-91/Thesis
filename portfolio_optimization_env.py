@@ -89,7 +89,9 @@ class PortfolioOptimizationEnv(gym.Env):
         time_window=1,
         cwd="./",
         new_gym_api=False,
-        use_sharpe=False
+        use_sharpe=False,
+        use_sortino=False
+
     ):
         """Initializes environment's instance.
 
@@ -140,6 +142,7 @@ class PortfolioOptimizationEnv(gym.Env):
         self._cwd = Path(cwd)
         self._new_gym_api = new_gym_api
         self._use_sharpe = use_sharpe
+        self._use_sortino = use_sortino
 
         # results file
         self._results_file = self._cwd / "results" / "rl"
@@ -368,7 +371,10 @@ class PortfolioOptimizationEnv(gym.Env):
             self._portfolio_return_memory.append(portfolio_return)
             if self._use_sharpe:
                 portfolio_reward = qs.stats.sharpe(
-                    pd.Series(self._portfolio_return_memory))
+                    pd.Series(self._portfolio_return_memory), annualize=False, periods=21)
+            elif self._use_sortino:
+                portfolio_reward = qs.stats.sharpe(
+                    pd.Series(self._portfolio_return_memory), annualize=False, periods=21)
             else:
                 portfolio_reward = np.log(rate_of_return)
             self._portfolio_reward_memory.append(portfolio_reward)

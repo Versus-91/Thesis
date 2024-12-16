@@ -56,7 +56,7 @@ def DRL_prediction(model, environment, time_window, deterministic=True):
     return account_memory, actions_memory, test_obs
 
 
-def benchmark(train_data, test_data, iterations, t, features):
+def benchmark(train_data, test_data, iterations, t, features, INDICATORS, save=True, tag='return_vector_log_return_reward_recession', reward_sortino=False, reward_sharpe=False, load_model=False):
     final_result = []
     models = [
         {'name': 'ppo', 'args': {
@@ -79,7 +79,7 @@ def benchmark(train_data, test_data, iterations, t, features):
     for i, m in enumerate(models):
         result = {}
         train_environment = PortfolioOptimizationEnv(
-            df=train_data, **env_kwargs)
+            df=train_data, use_sharpe=reward_sharpe, use_sortino=reward_sortino, **env_kwargs)
         test_environment = PortfolioOptimizationEnv(df=test_data, **env_kwargs)
         agent = DRLAgent(env=train_environment)
         model = agent.get_model(
@@ -97,7 +97,16 @@ def benchmark(train_data, test_data, iterations, t, features):
                 "portfolio_values": train_environment._asset_memory["final"],
             }
         )
-        model.save('./data/'+m['name'])
+        if not load_model:
+            model = agent.train_model(model=ppo_model,
+                                      tb_log_name=m['name'],
+                                      total_timesteps=iterations)
+        else:
+            print('loading model')
+            model = model.load(
+                './data/'+m['name']+'_'+str(iterations)+'_' + tag, env=train_environment)
+        if save and not load_model:
+            model.save('./data/'+m['name']+'_'+str(iterations)+'_' + tag)
         prediction_summary = DRL_prediction(ppo_model, test_environment, t)
         result["train"] = training_summary
         result["test"] = prediction_summary
