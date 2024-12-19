@@ -241,7 +241,8 @@ class StockTradingEnv(gym.Env):
                 + sum(
                     np.array(self.state[1: (self.stock_dim + 1)])
                     * np.array(
-                        self.state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)]
+                        self.state[(self.stock_dim + 1)
+                                    : (self.stock_dim * 2 + 1)]
                     )
                 )
                 - self.asset_memory[0]
@@ -360,21 +361,28 @@ class StockTradingEnv(gym.Env):
                 if self.sortino_reward:
                     log_return = np.log(end_total_asset / begin_total_asset)
                     self.rewards_memory.append(log_return)
-                    self.reward = qs.stats.sortino(
-                        pd.Series(self.rewards_memory), periods=21, annualize=False)
+                    sortino = qs.stats.sortino(
+                        pd.Series(self.rewards_memory), periods=21, annualize=True)
+                    if np.isnan(sortino) | np.isinf(sortino):
+                        sortino = 0.0
+                    self.reward = sortino
                 elif self.sharpe_reward:
                     log_return = np.log(
                         end_total_asset / begin_total_asset)
                     self.rewards_memory.append(log_return)
-                    self.reward = qs.stats.sharpe(
-                        pd.Series(self.rewards_memory), periods=21, annualize=False)
+                    sharp = qs.stats.sharpe(
+                        pd.Series(self.rewards_memory), periods=21, annualize=True)
+                    if np.isnan(sharp) | np.isinf(sharp):
+                        sharp = 0.0
+                    self.reward = sharp
+
                 else:
                     log_return = np.log(
                         end_total_asset / begin_total_asset)
                     self.rewards_memory.append(log_return)
                     self.reward = log_return
-            except e:
-              print('An exception occurred',self.rewards_memory)
+            except Exception as e:
+                print('An exception occurred', self.rewards_memory)
             self.state_memory.append(
                 self.state
             )  # add current state in state_recorder for each step
@@ -404,7 +412,8 @@ class StockTradingEnv(gym.Env):
             previous_total_asset = self.previous_state[0] + sum(
                 np.array(self.state[1: (self.stock_dim + 1)])
                 * np.array(
-                    self.previous_state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)]
+                    self.previous_state[(self.stock_dim + 1)
+                                         : (self.stock_dim * 2 + 1)]
                 )
             )
             self.asset_memory = [previous_total_asset]
@@ -488,7 +497,8 @@ class StockTradingEnv(gym.Env):
             state = (
                 [self.state[0]]
                 + self.data.close.values.tolist()
-                + list(self.state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)])
+                + list(self.state[(self.stock_dim + 1)
+                       : (self.stock_dim * 2 + 1)])
                 + sum(
                     (
                         self.data[tech].values.tolist()
@@ -503,7 +513,8 @@ class StockTradingEnv(gym.Env):
             state = (
                 [self.state[0]]
                 + [self.data.close]
-                + list(self.state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)])
+                + list(self.state[(self.stock_dim + 1)
+                       : (self.stock_dim * 2 + 1)])
                 + sum(([self.data[tech]]
                       for tech in self.tech_indicator_list), [])
             )

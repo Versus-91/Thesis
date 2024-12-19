@@ -115,7 +115,7 @@ def benchmark(train_data, test_data, iterations, t, features, INDICATORS, save=T
     return final_result
 
 
-def baseline(data, INDICATORS, TEST_START_DATE, TEST_END_DATE):
+def baseline(data, INDICATORS, TEST_START_DATE, TEST_END_DATE, solver='OSQP', rf=0.02, pct=0.001):
     final_result = []
     df = data.sort_values(['date', 'tic'], ignore_index=True).copy()
     df.index = df.date.factorize()[0]
@@ -148,7 +148,7 @@ def baseline(data, INDICATORS, TEST_START_DATE, TEST_END_DATE):
     env_kwargs = {
         "hmax": 100,
         "initial_amount": 50_000,
-        "transaction_cost_pct": 0.001,
+        "transaction_cost_pct": pct,
         "state_space": state_space,
         "stock_dim": stock_dimension,
         "tech_indicator_list": INDICATORS,
@@ -157,7 +157,7 @@ def baseline(data, INDICATORS, TEST_START_DATE, TEST_END_DATE):
 
     }
     e_test_gym = StockPortfolioEnv(df=test_df, **env_kwargs)
-    agent = MarkowitzAgent(e_test_gym)
+    agent = MarkowitzAgent(e_test_gym, rf=rf)
     mvo_min_variance = agent.prediction(e_test_gym)
     mvo_min_variance["method"] = "markowitz"
     mvo_min_variance.columns = ['date', 'account', 'return', 'method']
@@ -169,21 +169,21 @@ def baseline(data, INDICATORS, TEST_START_DATE, TEST_END_DATE):
     env_kwargs = {
         "hmax": 100,
         "initial_amount": 1000000,
-        "transaction_cost_pct": 0.001,
+        "transaction_cost_pct": pct,
         "state_space": state_space,
         "stock_dim": stock_dimension,
         "tech_indicator_list": INDICATORS,
         "action_space": stock_dimension,
         "reward_scaling": 1e-4
-
     }
 
     e_test_gym = StockPortfolioEnv(df=test_df, **env_kwargs)
-    agent = MarkowitzAgent(e_test_gym, objective='sharpe')
+    agent = MarkowitzAgent(e_test_gym, objective='sharpe', rf=rf)
     try:
         mvo_max_sharpe = agent.prediction(e_test_gym)
     except:
-        agent = MarkowitzAgent(e_test_gym, objective='sharpe', solver='SCS')
+        agent = MarkowitzAgent(
+            e_test_gym, objective='sharpe', solver=solver, rf=rf)
         mvo_max_sharpe = agent.prediction(e_test_gym)
     mvo_max_sharpe = agent.prediction(e_test_gym)
     mvo_max_sharpe["method"] = "markowitz"

@@ -128,6 +128,7 @@ class PortfolioOptimizationEnv(gym.Env):
         """
         self._time_window = time_window
         self._time_index = time_window - 1
+        self.episode = 0
         self._time_column = time_column
         self._time_format = time_format
         self._tic_column = tic_column
@@ -232,6 +233,7 @@ class PortfolioOptimizationEnv(gym.Env):
         self._terminal = self._time_index >= len(self._sorted_times) - 1
 
         if self._terminal:
+            self.episode = self.episode + 1
             metrics_df = pd.DataFrame(
                 {
                     "date": self._date_memory,
@@ -264,6 +266,7 @@ class PortfolioOptimizationEnv(gym.Env):
             plt.close()
 
             print("=================================")
+            print("Episode:{}".format(self.episode))
             print("Initial portfolio value:{}".format(
                 self._asset_memory["final"][0]))
             print(f"Final portfolio value: {self._portfolio_value}")
@@ -272,13 +275,13 @@ class PortfolioOptimizationEnv(gym.Env):
                     self._portfolio_value / self._asset_memory["final"][0]
                 )
             )
-            print(
-                "Maximum DrawDown: {}".format(
-                    qs.stats.max_drawdown(metrics_df["portfolio_values"])
-                )
-            )
-            print("Sharpe ratio: {}".format(
-                qs.stats.sharpe(metrics_df["returns"])))
+            # print(
+            #     "Maximum DrawDown: {}".format(
+            #         qs.stats.max_drawdown(metrics_df["portfolio_values"])
+            #     )
+            # )
+            # print("Sharpe ratio: {}".format(
+            #     qs.stats.sharpe(metrics_df["returns"])))
             print("=================================")
 
             qs.plots.snapshot(
@@ -371,10 +374,14 @@ class PortfolioOptimizationEnv(gym.Env):
             self._portfolio_return_memory.append(portfolio_return)
             if self._use_sharpe:
                 portfolio_reward = qs.stats.sharpe(
-                    pd.Series(self._portfolio_return_memory), annualize=False, periods=21)
+                    pd.Series(self._portfolio_return_memory[-21:]), annualize=False, periods=21)
+                if np.isnan(portfolio_reward) | np.isinf(portfolio_reward):
+                    print(self._portfolio_return_memory[-21:])
             elif self._use_sortino:
-                portfolio_reward = qs.stats.sharpe(
-                    pd.Series(self._portfolio_return_memory), annualize=False, periods=21)
+                portfolio_reward = qs.stats.sortino(
+                    pd.Series(self._portfolio_return_memory[-21:]), annualize=False, periods=21)
+                if np.isnan(portfolio_reward) | np.isinf(portfolio_reward):
+                    print(self._portfolio_return_memory[-21:])
             else:
                 portfolio_reward = np.log(rate_of_return)
             self._portfolio_reward_memory.append(portfolio_reward)

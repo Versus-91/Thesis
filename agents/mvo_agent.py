@@ -24,6 +24,7 @@ class MarkowitzAgent:
             env,
             solver='OSQP',
             risk_aversion=10,
+            rf=0.02,
             objective='min_variance',
             annual_risk_free_rate=0.03  # disregard risk free rate since RL disregards
     ):
@@ -31,6 +32,7 @@ class MarkowitzAgent:
         self.risk_aversion = risk_aversion
         self.env = env
         self.solver = solver
+        self.rf = rf
         self.objective = objective
         # compute daily risk free rate from annual risk free rate
         # self.risk_free_rate = (1 + annual_risk_free_rate) ** (1 / 365) - 1
@@ -62,7 +64,7 @@ class MarkowitzAgent:
         if self.objective == 'min_variance':
             ef.min_volatility()
         else:
-            ef.max_sharpe()
+            ef.max_sharpe(risk_free_rate=self.rf)
 
         weights = ef.clean_weights()
         list_weights = list(weights.values())

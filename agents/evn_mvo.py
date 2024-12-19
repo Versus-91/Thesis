@@ -187,16 +187,7 @@ class StockPortfolioEnv(gym.Env):
             self.time_index += 1
             day = self.sorted_times[self.time_index]
             self.state, self.info = self.get_state_and_info_from_day(day)
-            # self.data = self.df[self.df["time"] == day]
-            # self.covs = self.data["cov_list"].values[0]
-            # self.state = np.append(
-            #     np.array(self.covs),
-            #     [self.data[tech].values.tolist() for tech in self.tech_indicator_list],
-            #     axis=0,
-            # )
-            # print(self.state)
-            # calcualte portfolio return
-            # individual stocks' return * weight
+
             portfolio_return = sum(
                 ((self.data.close.values / last_day_memory.close.values) - 1) * weights
             )

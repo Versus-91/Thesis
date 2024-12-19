@@ -248,6 +248,7 @@ class FeatureEngineer:
         """
         df = data.copy()
         df["return"] = df.groupby('tic')['close'].pct_change()
+        df["log_return"] = np.log(df['close'] / df.groupby('tic')['close'].shift(1))
 
         return df
 
