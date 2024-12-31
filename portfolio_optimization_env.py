@@ -90,7 +90,9 @@ class PortfolioOptimizationEnv(gym.Env):
         cwd="./",
         new_gym_api=False,
         use_sharpe=False,
-        use_sortino=False
+        use_sortino=False,
+        use_differentail_sharpe_ratio=False,
+
 
     ):
         """Initializes environment's instance.
@@ -144,7 +146,7 @@ class PortfolioOptimizationEnv(gym.Env):
         self._new_gym_api = new_gym_api
         self._use_sharpe = use_sharpe
         self._use_sortino = use_sortino
-
+        self.use_differentail_sharpe_ratio = use_differentail_sharpe_ratio
         # results file
         self._results_file = self._cwd / "results" / "rl"
         self._results_file.mkdir(parents=True, exist_ok=True)
@@ -204,6 +206,15 @@ class PortfolioOptimizationEnv(gym.Env):
 
         self._portfolio_value = self._initial_amount
         self._terminal = False
+
+    def dsr(self, returns):
+        eta = 0.002
+        A = np.mean(returns[:21])
+        B = np.mean(returns[:21]**2)
+        delta_A = returns - A
+        delta_B = returns**2 - B
+        Dt = (B*delta_A - 0.5*A*delta_B) / (B-A**2)**(3/2)
+        return Dt*eta
 
     def step(self, actions):
         """Performs a simulation step.
@@ -375,6 +386,11 @@ class PortfolioOptimizationEnv(gym.Env):
             if self._use_sharpe:
                 portfolio_reward = qs.stats.sharpe(
                     pd.Series(self._portfolio_return_memory[-21:]), annualize=False, periods=21)
+                if np.isnan(portfolio_reward) | np.isinf(portfolio_reward):
+                    print(self._portfolio_return_memory[-21:])
+            elif self.use_differentail_sharpe_ratio:
+                portfolio_reward = self.dsr(
+                    np.array(self._portfolio_return_memory[-21:]))
                 if np.isnan(portfolio_reward) | np.isinf(portfolio_reward):
                     print(self._portfolio_return_memory[-21:])
             elif self._use_sortino:

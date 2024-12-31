@@ -76,12 +76,14 @@ class StockPortfolioEnv(gym.Env):
         turbulence_threshold=None,
         lookback=252,
         time_index=0,
+        window=1,
         cwd="./",
     ):
         # super(StockEnv, self).__init__()
         # money = 10 , scope = 1
         self.time_index = time_index
         self.lookback = lookback
+        self.window = window
         self.df = df
         self.stock_dim = stock_dim
         self.hmax = hmax
@@ -135,7 +137,7 @@ class StockPortfolioEnv(gym.Env):
         self.date_memory = [day]
 
     def step(self, actions):
-        self.terminal = self.time_index >= len(self.sorted_times) - 1
+        self.terminal = self.time_index >= len(self.sorted_times) - self.window
 
         if self.terminal:
             df = pd.DataFrame(
@@ -168,26 +170,18 @@ class StockPortfolioEnv(gym.Env):
             return self.state, self.reward, self.terminal, False, self.info
 
         else:
-            # print("Model actions: ",actions)
-            # actions are the portfolio weight
-            # normalize to sum of 1
-            # if (np.array(actions) - np.array(actions).min()).sum() != 0:
-            #  norm_actions = (np.array(actions) - np.array(actions).min()) / (np.array(actions) - np.array(actions).min()).sum()
-            # else:
-            #  norm_actions = actions
             if np.sum(actions) == 1 and np.min(actions) >= 0:
                 weights = actions
             else:
                 weights = self.softmax_normalization(actions)
-            # print("Normalized actions: ", weights)
             self.actions_memory.append(weights)
             last_day_memory = self.data
 
             # load next state
-            self.time_index += 1
+            self.time_index += self.window
             day = self.sorted_times[self.time_index]
             self.state, self.info = self.get_state_and_info_from_day(day)
-
+            self.info["initial_weights"] = weights
             portfolio_return = sum(
                 ((self.data.close.values / last_day_memory.close.values) - 1) * weights
             )
@@ -208,7 +202,7 @@ class StockPortfolioEnv(gym.Env):
         return self.state, self.reward, self.terminal, False, self.info
 
     def reset(self):
-        self.time_index = 0
+        self.time_index = self.window
         self.asset_memory = [self.initial_amount]
         day = self.sorted_times[self.time_index]
         self.state, self.info = self.get_state_and_info_from_day(day)
@@ -225,13 +219,14 @@ class StockPortfolioEnv(gym.Env):
         self.terminal = False
         self.portfolio_return_memory = [0]
         self.actions_memory = [[1 / self.stock_dim] * self.stock_dim]
+        self.info["initial_weights"] = self.actions_memory
         self.date_memory = [day]
         return self.state, self.info
 
     def get_state_and_info_from_day(self, day):
         self.data = self.df[self.df["time"] == day]
         covs = self.data["cov_list"].values[0]
-        state =  np.array(covs)
+        state = np.array(covs)
         info = {
             "data": self.df[self.df.time <= day],
         }

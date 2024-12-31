@@ -4,7 +4,7 @@ import cvxpy as cp
 import numpy as np
 import pandas as pd
 from collections import defaultdict
-from pypfopt import EfficientFrontier
+from pypfopt import EfficientFrontier, objective_functions
 
 
 class MarkowitzAgent:
@@ -26,11 +26,13 @@ class MarkowitzAgent:
             risk_aversion=10,
             rf=0.02,
             objective='min_variance',
+            cost=0.001,
             annual_risk_free_rate=0.03  # disregard risk free rate since RL disregards
     ):
         super().__init__()
         self.risk_aversion = risk_aversion
         self.env = env
+        self.transaction_cost = cost
         self.solver = solver
         self.rf = rf
         self.objective = objective
@@ -60,7 +62,11 @@ class MarkowitzAgent:
         # from the data estimate returns and covariances
         cov = data.iloc[-1].cov_list
         mean_returns = data.iloc[-1].returns
+        weights_prev = info.get("initial_weights")[0]
         ef = EfficientFrontier(mean_returns, cov, solver=self.solver)
+        if self.transaction_cost != 0:
+            ef.add_objective(objective_functions.transaction_cost,
+                             w_prev=weights_prev, k=self.transaction_cost)
         if self.objective == 'min_variance':
             ef.min_volatility()
         else:
