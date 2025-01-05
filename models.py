@@ -78,6 +78,7 @@ class DRLAgent:
 
     def __init__(self, env):
         self.env = env
+        self.checkpoint_callbakc = None
 
     def get_model(
         self,
@@ -103,6 +104,10 @@ class DRLAgent:
                 mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions)
             )
         print(model_kwargs)
+
+        # eval_callback = EvalCallback(env, best_model_save_path='./best_model/',
+        #                              log_path='./logs/', eval_freq=10000,
+        #                              deterministic=True, render=False)
         return MODELS[model_name](
             policy=policy,
             env=self.env,
@@ -115,12 +120,12 @@ class DRLAgent:
 
     @staticmethod
     def train_model(
-        model, tb_log_name, total_timesteps=5000
+        model, tb_log_name, total_timesteps=5000, checkpoint_callback=None
     ):  # this function is static method, so it can be called without creating an instance of the class
         model = model.learn(
             total_timesteps=total_timesteps,
             tb_log_name=tb_log_name,
-            callback=TensorboardCallback(),
+            callback=[TensorboardCallback(), checkpoint_callback],
         )
         return model
 
@@ -236,7 +241,7 @@ class DRLEnsembleAgent:
         model = model.learn(
             total_timesteps=total_timesteps,
             tb_log_name=tb_log_name,
-            callback=TensorboardCallback(),
+            callback=[TensorboardCallback()],
         )
         model.save(
             f"{config.TRAINED_MODEL_DIR}/{model_name.upper()}_{total_timesteps // 1000}k_{iter_num}"
