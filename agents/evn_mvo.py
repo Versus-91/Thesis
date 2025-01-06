@@ -180,14 +180,22 @@ class StockPortfolioEnv(gym.Env):
             # load next state
             self.time_index += self.window
             day = self.sorted_times[self.time_index]
+            fees = 0
             self.state, self.info = self.get_state_and_info_from_day(day)
-            self.info["initial_weights"] = weights
+            if self.transaction_cost_pct != 0:
+                delta_weights = weights - self.actions_memory[-2]
+                # delta_assets = delta_weights[1:]  # disconsider
+                # calculate fees considering weights modification
+                diff = np.sum(np.abs(delta_weights * self.portfolio_value))
+                if diff != 0:
+                    fees = diff * self.transaction_cost_pct
+
             portfolio_return = sum(
                 ((self.data.close.values / last_day_memory.close.values) - 1) * weights
             )
             # update portfolio value
             new_portfolio_value = self.portfolio_value * (1 + portfolio_return)
-            self.portfolio_value = new_portfolio_value
+            self.portfolio_value = new_portfolio_value - fees
 
             # save into memory
             self.portfolio_return_memory.append(portfolio_return)
