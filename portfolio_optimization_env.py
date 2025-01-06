@@ -78,7 +78,7 @@ class PortfolioOptimizationEnv(gym.Env):
         return_last_action=False,
         normalize_df="by_previous_time",
         reward_scaling=1,
-        comission_fee_model="trf",
+        comission_fee_model="wvm",
         comission_fee_pct=0,
         features=["close", "high", "low"],
         valuation_feature="close",
@@ -164,7 +164,7 @@ class PortfolioOptimizationEnv(gym.Env):
             if tics_in_portfolio == "all"
             else len(tics_in_portfolio)
         )
-        action_space = 1 + self.portfolio_size
+        action_space = self.portfolio_size
 
         # sort datetimes and define episode length
         self._sorted_times = sorted(set(self._df[time_column]))
@@ -173,8 +173,7 @@ class PortfolioOptimizationEnv(gym.Env):
         # define action space
         self.action_space = spaces.Box(low=0, high=1, shape=(action_space,))
         features = [x for x in self._features if x.strip(
-        ).lower() != "close"]
-        # define observation state
+        ).lower() != "close"]        # define observation state
         if self._return_last_action:
             # if  last action must be returned, a dict observation
             # is defined
@@ -330,17 +329,18 @@ class PortfolioOptimizationEnv(gym.Env):
             # if using weights vector modifier, we need to modify weights vector
             if self._comission_fee_model == "wvm":
                 delta_weights = weights - last_weights
-                delta_assets = delta_weights[1:]  # disconsider
+                # delta_assets = delta_weights[1:]  # disconsider
                 # calculate fees considering weights modification
-                fees = np.sum(np.abs(delta_assets * self._portfolio_value))
-                if fees > weights[0] * self._portfolio_value:
+                fees = np.sum(
+                    np.abs(delta_weights * self._portfolio_value)) * self._comission_fee_pct
+                new_balance = self._portfolio_value - fees
+
+                if new_balance < 0:
                     weights = last_weights
-                    # maybe add negative reward
+                    self._reward -= 10
                 else:
+                    self._portfolio_value = new_balance
                     portfolio = weights * self._portfolio_value
-                    portfolio[0] -= fees
-                    self._portfolio_value = np.sum(
-                        portfolio)  # new portfolio value
                     weights = portfolio / self._portfolio_value  # new weights
             elif self._comission_fee_model == "trf":
                 last_mu = 1
@@ -488,13 +488,12 @@ class PortfolioOptimizationEnv(gym.Env):
         self._price_variation = self._df_price_variation[
             self._df_price_variation[self._time_column] == end_time
         ][self._valuation_feature].to_numpy()
-        self._price_variation = np.insert(self._price_variation, 0, 1)
+        # self._price_variation = np.insert(self._price_variation, 0, 1)
 
         # define state to be returned
         state = None
         features = [x for x in self._features if x.strip(
         ).lower() != "close"]
-
         for tic in self._tic_list:
             tic_data = self._data[self._data[self._tic_column] == tic]
             tic_data = tic_data[features
@@ -595,11 +594,13 @@ class PortfolioOptimizationEnv(gym.Env):
         self._portfolio_reward_memory = [0]
         # initial action: all money is allocated in cash
         self._actions_memory = [
-            np.array([1] + [0] * self.portfolio_size, dtype=np.float32)
+            np.array([1/self.portfolio_size] *
+                     self.portfolio_size, dtype=np.float32)
         ]
         # memorize portfolio weights at the ending of time step
         self._final_weights = [
-            np.array([1] + [0] * self.portfolio_size, dtype=np.float32)
+            np.array([1/self.portfolio_size] *
+                     self.portfolio_size, dtype=np.float32)
         ]
         # memorize datetimes
         self._date_memory = [date_time]
