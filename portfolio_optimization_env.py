@@ -78,7 +78,7 @@ class PortfolioOptimizationEnv(gym.Env):
         return_last_action=False,
         normalize_df="by_previous_time",
         reward_scaling=1,
-        comission_fee_model="wvm",
+        comission_fee_model="trf",
         comission_fee_pct=0,
         features=["close", "high", "low"],
         valuation_feature="close",
@@ -89,11 +89,6 @@ class PortfolioOptimizationEnv(gym.Env):
         time_window=1,
         cwd="./",
         new_gym_api=False,
-        use_sharpe=False,
-        use_sortino=False,
-        use_differentail_sharpe_ratio=False,
-
-
     ):
         """Initializes environment's instance.
 
@@ -130,7 +125,6 @@ class PortfolioOptimizationEnv(gym.Env):
         """
         self._time_window = time_window
         self._time_index = time_window - 1
-        self.episode = 0
         self._time_column = time_column
         self._time_format = time_format
         self._tic_column = tic_column
@@ -144,9 +138,7 @@ class PortfolioOptimizationEnv(gym.Env):
         self._valuation_feature = valuation_feature
         self._cwd = Path(cwd)
         self._new_gym_api = new_gym_api
-        self._use_sharpe = use_sharpe
-        self._use_sortino = use_sortino
-        self.use_differentail_sharpe_ratio = use_differentail_sharpe_ratio
+
         # results file
         self._results_file = self._cwd / "results" / "rl"
         self._results_file.mkdir(parents=True, exist_ok=True)
@@ -164,7 +156,7 @@ class PortfolioOptimizationEnv(gym.Env):
             if tics_in_portfolio == "all"
             else len(tics_in_portfolio)
         )
-        action_space = self.portfolio_size
+        action_space = 1 + self.portfolio_size
 
         # sort datetimes and define episode length
         self._sorted_times = sorted(set(self._df[time_column]))
@@ -172,8 +164,8 @@ class PortfolioOptimizationEnv(gym.Env):
 
         # define action space
         self.action_space = spaces.Box(low=0, high=1, shape=(action_space,))
-        features = [x for x in self._features if x.strip(
-        ).lower() != "close"]        # define observation state
+
+        # define observation state
         if self._return_last_action:
             # if  last action must be returned, a dict observation
             # is defined
@@ -183,7 +175,7 @@ class PortfolioOptimizationEnv(gym.Env):
                         low=-np.inf,
                         high=np.inf,
                         shape=(
-                            len(features),
+                            len(self._features),
                             len(self._tic_list),
                             self._time_window,
                         ),
@@ -197,23 +189,14 @@ class PortfolioOptimizationEnv(gym.Env):
             self.observation_space = spaces.Box(
                 low=-np.inf,
                 high=np.inf,
-                shape=(
-                    len(features), len(self._tic_list), self._time_window),
+                shape=(len(self._features), len(
+                    self._tic_list), self._time_window),
             )
 
         self._reset_memory()
 
         self._portfolio_value = self._initial_amount
         self._terminal = False
-
-    def dsr(self, returns):
-        eta = 0.002
-        A = np.mean(returns[:21])
-        B = np.mean(returns[:21]**2)
-        delta_A = returns - A
-        delta_B = returns**2 - B
-        Dt = (B*delta_A - 0.5*A*delta_B) / (B-A**2)**(3/2)
-        return Dt*eta
 
     def step(self, actions):
         """Performs a simulation step.
@@ -243,7 +226,6 @@ class PortfolioOptimizationEnv(gym.Env):
         self._terminal = self._time_index >= len(self._sorted_times) - 1
 
         if self._terminal:
-            self.episode = self.episode + 1
             metrics_df = pd.DataFrame(
                 {
                     "date": self._date_memory,
@@ -276,7 +258,6 @@ class PortfolioOptimizationEnv(gym.Env):
             plt.close()
 
             print("=================================")
-            print("Episode:{}".format(self.episode))
             print("Initial portfolio value:{}".format(
                 self._asset_memory["final"][0]))
             print(f"Final portfolio value: {self._portfolio_value}")
@@ -285,13 +266,13 @@ class PortfolioOptimizationEnv(gym.Env):
                     self._portfolio_value / self._asset_memory["final"][0]
                 )
             )
-            # print(
-            #     "Maximum DrawDown: {}".format(
-            #         qs.stats.max_drawdown(metrics_df["portfolio_values"])
-            #     )
-            # )
-            # print("Sharpe ratio: {}".format(
-            #     qs.stats.sharpe(metrics_df["returns"])))
+            print(
+                "Maximum DrawDown: {}".format(
+                    qs.stats.max_drawdown(metrics_df["portfolio_values"])
+                )
+            )
+            print("Sharpe ratio: {}".format(
+                qs.stats.sharpe(metrics_df["returns"])))
             print("=================================")
 
             qs.plots.snapshot(
@@ -329,18 +310,17 @@ class PortfolioOptimizationEnv(gym.Env):
             # if using weights vector modifier, we need to modify weights vector
             if self._comission_fee_model == "wvm":
                 delta_weights = weights - last_weights
-                # delta_assets = delta_weights[1:]  # disconsider
+                delta_assets = delta_weights[1:]  # disconsider
                 # calculate fees considering weights modification
-                fees = np.sum(
-                    np.abs(delta_weights * self._portfolio_value)) * self._comission_fee_pct
-                new_balance = self._portfolio_value - fees
-
-                if new_balance < 0:
+                fees = np.sum(np.abs(delta_assets * self._portfolio_value))
+                if fees > weights[0] * self._portfolio_value:
                     weights = last_weights
-                    self._reward -= 10
+                    # maybe add negative reward
                 else:
-                    self._portfolio_value = new_balance
                     portfolio = weights * self._portfolio_value
+                    portfolio[0] -= fees
+                    self._portfolio_value = np.sum(
+                        portfolio)  # new portfolio value
                     weights = portfolio / self._portfolio_value  # new weights
             elif self._comission_fee_model == "trf":
                 last_mu = 1
@@ -374,37 +354,21 @@ class PortfolioOptimizationEnv(gym.Env):
 
             # save date memory
             self._date_memory.append(self._info["end_time"])
+
             # define portfolio return
             rate_of_return = (
                 self._asset_memory["final"][-1] /
                 self._asset_memory["final"][-2]
             )
             portfolio_return = rate_of_return - 1
+            portfolio_reward = np.log(rate_of_return)
 
             # save portfolio return memory
             self._portfolio_return_memory.append(portfolio_return)
-            if self._use_sharpe:
-                portfolio_reward = qs.stats.sharpe(
-                    pd.Series(self._portfolio_return_memory[-21:]), annualize=False, periods=21)
-                if np.isnan(portfolio_reward) | np.isinf(portfolio_reward):
-                    print(self._portfolio_return_memory[-21:])
-            elif self.use_differentail_sharpe_ratio:
-                portfolio_reward = self.dsr(
-                    np.array(self._portfolio_return_memory[-21:]))
-                if np.isnan(portfolio_reward) | np.isinf(portfolio_reward):
-                    print(self._portfolio_return_memory[-21:])
-            elif self._use_sortino:
-                portfolio_reward = qs.stats.sortino(
-                    pd.Series(self._portfolio_return_memory[-21:]), annualize=False, periods=21)
-                if np.isnan(portfolio_reward) | np.isinf(portfolio_reward):
-                    print(self._portfolio_return_memory[-21:])
-            else:
-                portfolio_reward = np.log(rate_of_return)
             self._portfolio_reward_memory.append(portfolio_reward)
 
             # Define portfolio return
             self._reward = portfolio_reward
-
             self._reward = self._reward * self._reward_scaling
 
         if self._new_gym_api:
@@ -488,21 +452,17 @@ class PortfolioOptimizationEnv(gym.Env):
         self._price_variation = self._df_price_variation[
             self._df_price_variation[self._time_column] == end_time
         ][self._valuation_feature].to_numpy()
-        # self._price_variation = np.insert(self._price_variation, 0, 1)
+        self._price_variation = np.insert(self._price_variation, 0, 1)
 
         # define state to be returned
         state = None
-        features = [x for x in self._features if x.strip(
-        ).lower() != "close"]
         for tic in self._tic_list:
             tic_data = self._data[self._data[self._tic_column] == tic]
-            tic_data = tic_data[features
-                                ].to_numpy().T
+            tic_data = tic_data[self._features].to_numpy().T
             tic_data = tic_data[..., np.newaxis]
             state = tic_data if state is None else np.append(
                 state, tic_data, axis=2)
         state = state.transpose((0, 2, 1))
-
         info = {
             "tics": self._tic_list,
             "start_time": start_time,
@@ -594,13 +554,11 @@ class PortfolioOptimizationEnv(gym.Env):
         self._portfolio_reward_memory = [0]
         # initial action: all money is allocated in cash
         self._actions_memory = [
-            np.array([1/self.portfolio_size] *
-                     self.portfolio_size, dtype=np.float32)
+            np.array([1] + [0] * self.portfolio_size, dtype=np.float32)
         ]
         # memorize portfolio weights at the ending of time step
         self._final_weights = [
-            np.array([1/self.portfolio_size] *
-                     self.portfolio_size, dtype=np.float32)
+            np.array([1] + [0] * self.portfolio_size, dtype=np.float32)
         ]
         # memorize datetimes
         self._date_memory = [date_time]
