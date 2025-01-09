@@ -120,12 +120,12 @@ class DRLAgent:
 
     @staticmethod
     def train_model(
-        model, tb_log_name, total_timesteps=5000, checkpoint_callback=None
+        model, tb_log_name, total_timesteps=5000, checkpoint_callback=None, eval_callbakc=None
     ):  # this function is static method, so it can be called without creating an instance of the class
         model = model.learn(
             total_timesteps=total_timesteps,
             tb_log_name=tb_log_name,
-            callback=[TensorboardCallback(), checkpoint_callback],
+            callback=[TensorboardCallback(), checkpoint_callback,eval_callbakc],
         )
         return model
 

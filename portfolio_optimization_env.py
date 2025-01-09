@@ -77,8 +77,8 @@ class PortfolioOptimizationEnv(gym.Env):
         order_df=True,
         return_last_action=False,
         normalize_df="by_previous_time",
-        reward_scaling=1,
         comission_fee_model="trf",
+        reward_scaling=1,
         comission_fee_pct=0,
         features=["close", "high", "low"],
         valuation_feature="close",
@@ -164,7 +164,8 @@ class PortfolioOptimizationEnv(gym.Env):
 
         # define action space
         self.action_space = spaces.Box(low=0, high=1, shape=(action_space,))
-
+        features = [x for x in self._features if x.strip(
+        ).lower() != "close"]
         # define observation state
         if self._return_last_action:
             # if  last action must be returned, a dict observation
@@ -175,7 +176,7 @@ class PortfolioOptimizationEnv(gym.Env):
                         low=-np.inf,
                         high=np.inf,
                         shape=(
-                            len(self._features),
+                            len(features),
                             len(self._tic_list),
                             self._time_window,
                         ),
@@ -308,6 +309,7 @@ class PortfolioOptimizationEnv(gym.Env):
             )
 
             # if using weights vector modifier, we need to modify weights vector
+            overtrade_penalty = 0
             if self._comission_fee_model == "wvm":
                 delta_weights = weights - last_weights
                 delta_assets = delta_weights[1:]  # disconsider
@@ -315,6 +317,7 @@ class PortfolioOptimizationEnv(gym.Env):
                 fees = np.sum(np.abs(delta_assets * self._portfolio_value))
                 if fees > weights[0] * self._portfolio_value:
                     weights = last_weights
+                    overtrade_penalty = -10
                     # maybe add negative reward
                 else:
                     portfolio = weights * self._portfolio_value
@@ -368,7 +371,7 @@ class PortfolioOptimizationEnv(gym.Env):
             self._portfolio_reward_memory.append(portfolio_reward)
 
             # Define portfolio return
-            self._reward = portfolio_reward
+            self._reward = portfolio_reward + overtrade_penalty
             self._reward = self._reward * self._reward_scaling
 
         if self._new_gym_api:
@@ -455,10 +458,13 @@ class PortfolioOptimizationEnv(gym.Env):
         self._price_variation = np.insert(self._price_variation, 0, 1)
 
         # define state to be returned
+
+        features = [x for x in self._features if x.strip(
+        ).lower() != "close"]
         state = None
         for tic in self._tic_list:
             tic_data = self._data[self._data[self._tic_column] == tic]
-            tic_data = tic_data[self._features].to_numpy().T
+            tic_data = tic_data[features].to_numpy().T
             tic_data = tic_data[..., np.newaxis]
             state = tic_data if state is None else np.append(
                 state, tic_data, axis=2)
