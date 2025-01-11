@@ -123,6 +123,7 @@ class StockPortfolioEnv(gym.Env):
         #     [self.data[tech].values.tolist() for tech in self.tech_indicator_list],
         #     axis=0,
         # )
+        self.actions_memory = [[1 / self.stock_dim] * self.stock_dim]
         self.state, self.info = self.get_state_and_info_from_day(day)
         self.terminal = False
         self.turbulence_threshold = turbulence_threshold
@@ -133,7 +134,6 @@ class StockPortfolioEnv(gym.Env):
         self.asset_memory = [self.initial_amount]
         # memorize portfolio return each step
         self.portfolio_return_memory = [0]
-        self.actions_memory = [[1 / self.stock_dim] * self.stock_dim]
         self.date_memory = [day]
 
     def step(self, actions):
@@ -227,7 +227,6 @@ class StockPortfolioEnv(gym.Env):
         self.terminal = False
         self.portfolio_return_memory = [0]
         self.actions_memory = [[1 / self.stock_dim] * self.stock_dim]
-        self.info["initial_weights"] = self.actions_memory
         self.date_memory = [day]
         return self.state, self.info
 
@@ -237,6 +236,8 @@ class StockPortfolioEnv(gym.Env):
         state = np.array(covs)
         info = {
             "data": self.df[self.df.time <= day],
+            'before_last_weight': self.actions_memory[-2] if len(self.actions_memory) >= 2 else self.actions_memory[-1],
+            'last_weight': self.actions_memory[-1]
         }
         return state, info
 

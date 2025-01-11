@@ -176,7 +176,7 @@ class PortfolioOptimizationEnv(gym.Env):
                         low=-np.inf,
                         high=np.inf,
                         shape=(
-                            len(features) + 1,
+                            len(features),
                             len(self._tic_list),
                             self._time_window,
                         ),
@@ -475,14 +475,6 @@ class PortfolioOptimizationEnv(gym.Env):
             state = tic_data if state is None else np.append(
                 state, tic_data, axis=2)
 
-        final_weights = self._final_weights[-1]
-        zeroes = np.zeros((self._time_window-1, len(final_weights)))
-        final_weights = np.expand_dims(final_weights, axis=0)
-        final_weights = np.concatenate([zeroes, final_weights])
-
-        final_weights = np.expand_dims(final_weights, axis=0)
-        state = np.concatenate(
-            [state, final_weights], axis=0)
         state = state.transpose((0, 2, 1))
         info = {
             "tics": self._tic_list,

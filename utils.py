@@ -55,11 +55,14 @@ def mvo(data, solver='OSQP', window=1, rf=0.02, pct=0.001, objective='min_varian
         "window": window
 
     }
-    e_test_gym = StockPortfolioEnv(df=data, **env_kwargs)
-    agent = MarkowitzAgent(e_test_gym, rf=rf, objective=objective, cost=pct)
-    mvo_min_variance = agent.prediction(e_test_gym)
+    test_env = StockPortfolioEnv(df=data, **env_kwargs)
+    agent = MarkowitzAgent(test_env, rf=rf, objective=objective, cost=pct)
+    mvo_min_variance = agent.prediction(test_env)
     mvo_min_variance["method"] = "markowitz"
     mvo_min_variance.columns = ['date', 'account', 'return', 'method']
     result["test"] = mvo_min_variance
     result["name"] = 'Min Variance Portfolio'
+    result["action"] = test_env.actions_memory
+    result["date"] = test_env.date_memory
+
     return result

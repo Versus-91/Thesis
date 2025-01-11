@@ -63,6 +63,11 @@ class MarkowitzAgent:
         cov = data.iloc[-1].cov_list
         mean_returns = data.iloc[-1].returns
         ef = EfficientFrontier(mean_returns, cov, solver=self.solver)
+        weights_last = info.get("last_weight")
+
+        if self.transaction_cost != 0:
+            ef.add_objective(objective_functions.transaction_cost,
+                            w_prev=weights_last, k=self.transaction_cost)
         if self.objective == 'min_variance':
             ef.min_volatility()
         else:

@@ -85,6 +85,7 @@ class PortfolioOptimizationEnv(gym.Env):
         time_column="date",
         time_format="%Y-%m-%d",
         tic_column="tic",
+        sharpe_reward=False,
         tics_in_portfolio="all",
         time_window=1,
         cwd="./",
@@ -138,10 +139,14 @@ class PortfolioOptimizationEnv(gym.Env):
         self._valuation_feature = valuation_feature
         self._cwd = Path(cwd)
         self._new_gym_api = new_gym_api
-
         # results file
         self._results_file = self._cwd / "results" / "rl"
         self._results_file.mkdir(parents=True, exist_ok=True)
+        self.buffer_size = 62
+        self.return_vector = np.empty(self.buffer_size)
+        self.index = 0
+        self.count = 0
+        self.sharpe_reward = sharpe_reward
 
         # initialize price variation
         self._df_price_variation = None
@@ -164,8 +169,7 @@ class PortfolioOptimizationEnv(gym.Env):
 
         # define action space
         self.action_space = spaces.Box(low=0, high=1, shape=(action_space,))
-        features = [x for x in self._features if x.strip(
-        ).lower() != "close"]
+
         # define observation state
         if self._return_last_action:
             # if  last action must be returned, a dict observation
@@ -176,7 +180,7 @@ class PortfolioOptimizationEnv(gym.Env):
                         low=-np.inf,
                         high=np.inf,
                         shape=(
-                            len(features),
+                            len(self._features),
                             len(self._tic_list),
                             self._time_window,
                         ),
@@ -198,6 +202,21 @@ class PortfolioOptimizationEnv(gym.Env):
 
         self._portfolio_value = self._initial_amount
         self._terminal = False
+
+    def add_return(self, value):
+        self.return_vector[self.index] = value
+        self.index = (self.index + 1) % self.buffer_size
+        self.count = min(self.count + 1, self.buffer_size)
+
+    def get_sharpe_ratio(self, risk_free_rate=0.0):
+        if self.count == 0:
+            return 0
+        valid_data = self.return_vector[:self.count] if self.count < self.buffer_size else self.return_vector
+        mean_return = np.mean(valid_data)
+        std_return = np.std(valid_data)
+        sharpe_ratio = (mean_return - risk_free_rate) / \
+            std_return if std_return > 0 else 0
+        return sharpe_ratio
 
     def step(self, actions):
         """Performs a simulation step.
@@ -369,9 +388,14 @@ class PortfolioOptimizationEnv(gym.Env):
             # save portfolio return memory
             self._portfolio_return_memory.append(portfolio_return)
             self._portfolio_reward_memory.append(portfolio_reward)
-
+            self.add_return(portfolio_return)
             # Define portfolio return
-            self._reward = portfolio_reward + overtrade_penalty
+            if self.sharpe_reward:
+                sharpe_ratio = self.get_sharpe_ratio()
+                self._reward = sharpe_ratio
+            else:
+                self._reward = portfolio_reward + overtrade_penalty
+
             self._reward = self._reward * self._reward_scaling
 
         if self._new_gym_api:
@@ -459,12 +483,10 @@ class PortfolioOptimizationEnv(gym.Env):
 
         # define state to be returned
 
-        features = [x for x in self._features if x.strip(
-        ).lower() != "close"]
         state = None
         for tic in self._tic_list:
             tic_data = self._data[self._data[self._tic_column] == tic]
-            tic_data = tic_data[features].to_numpy().T
+            tic_data = tic_data[self._features].to_numpy().T
             tic_data = tic_data[..., np.newaxis]
             state = tic_data if state is None else np.append(
                 state, tic_data, axis=2)
