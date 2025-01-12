@@ -163,6 +163,8 @@ class PortfolioOptimizationEnv(gym.Env):
         self.episode_length = len(self._sorted_times) - time_window + 1
 
         # define action space
+        action_space = self.portfolio_size
+        
         self.action_space = spaces.Box(low=0, high=1, shape=(action_space,))
         features = [x for x in self._features if x.strip(
         ).lower() != "close"]

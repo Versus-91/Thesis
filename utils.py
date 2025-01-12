@@ -39,7 +39,7 @@ def mvo_data(data, TEST_START_DATE, TEST_END_DATE):
     return test_df
 
 
-def mvo(data, solver='OSQP', window=1, rf=0.02, pct=0.001, objective='min_variance'):
+def mvo(data, solver='OSQP', window=1, rf=0.02, pct=0.001, objective='min_variance', multi_objective=False):
     result = {}
     stock_dimension = len(data.tic.unique())
     state_space = stock_dimension
@@ -56,7 +56,7 @@ def mvo(data, solver='OSQP', window=1, rf=0.02, pct=0.001, objective='min_varian
 
     }
     test_env = StockPortfolioEnv(df=data, **env_kwargs)
-    agent = MarkowitzAgent(test_env, rf=rf, objective=objective, cost=pct)
+    agent = MarkowitzAgent(test_env, rf=rf, objective=objective, cost=pct,multi_objective=multi_objective)
     mvo_min_variance = agent.prediction(test_env)
     mvo_min_variance["method"] = "markowitz"
     mvo_min_variance.columns = ['date', 'account', 'return', 'method']

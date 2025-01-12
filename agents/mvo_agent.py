@@ -27,6 +27,7 @@ class MarkowitzAgent:
             rf=0.02,
             objective='min_variance',
             cost=0.001,
+            multi_objective=False,
             annual_risk_free_rate=0.03  # disregard risk free rate since RL disregards
     ):
         super().__init__()
@@ -36,6 +37,7 @@ class MarkowitzAgent:
         self.solver = solver
         self.rf = rf
         self.objective = objective
+        self.multi_objective=multi_objective
         # compute daily risk free rate from annual risk free rate
         # self.risk_free_rate = (1 + annual_risk_free_rate) ** (1 / 365) - 1
         # disable risk free rate for now
@@ -65,9 +67,9 @@ class MarkowitzAgent:
         ef = EfficientFrontier(mean_returns, cov, solver=self.solver)
         weights_last = info.get("last_weight")
 
-        if self.transaction_cost != 0:
+        if self.transaction_cost != 0 and self.multi_objective:
             ef.add_objective(objective_functions.transaction_cost,
-                            w_prev=weights_last, k=self.transaction_cost)
+                             w_prev=weights_last, k=self.transaction_cost)
         if self.objective == 'min_variance':
             ef.min_volatility()
         else:
