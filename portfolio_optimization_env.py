@@ -77,6 +77,7 @@ class PortfolioOptimizationEnv(gym.Env):
         order_df=True,
         return_last_action=False,
         normalize_df="by_previous_time",
+        remove_close_from_state=True,
         comission_fee_model="trf",
         reward_scaling=1,
         comission_fee_pct=0,
@@ -146,6 +147,7 @@ class PortfolioOptimizationEnv(gym.Env):
         self.return_vector = np.empty(self.buffer_size)
         self.index = 0
         self.count = 0
+        self.remove_close_from_state = remove_close_from_state
         self.sharpe_reward = sharpe_reward
 
         # initialize price variation
@@ -169,7 +171,12 @@ class PortfolioOptimizationEnv(gym.Env):
 
         # define action space
         self.action_space = spaces.Box(low=0, high=1, shape=(action_space,))
-        features = [x for x in self._features if x.strip().lower() != "close"]
+        if self.remove_close_from_state:
+            features = [x for x in self._features if x.strip().lower()
+                        != "close"]
+        else:
+            features = self._features
+
         # define observation state
         if self._return_last_action:
             # if  last action must be returned, a dict observation
@@ -482,8 +489,12 @@ class PortfolioOptimizationEnv(gym.Env):
         self._price_variation = np.insert(self._price_variation, 0, 1)
 
         # define state to be returned
-        features = [x for x in self._features if x.strip(
-        ).lower() != "close"]
+        if self.remove_close_from_state:
+            features = [x for x in self._features if x.strip().lower()
+                        != "close"]
+        else:
+            features = self._features
+
         state = None
         for tic in self._tic_list:
             tic_data = self._data[self._data[self._tic_column] == tic]
