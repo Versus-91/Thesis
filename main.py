@@ -88,17 +88,16 @@ if __name__ == '__main__':
 
     optimizer = PortfolioOptimization(
         transaction_fee=0.003, vectorize=False,tag="wth_weith_state")
-    optimizer.train_model(train_data,
-                          validation_data,
-                          features=["close", "log_return"],
-                          policy_network="MultiInputLstmPolicy",
-                          model_name="RecurrentPPO",
-                          window_size=5,
-                          iterations=1000_000)
-    # optimizer = PortfolioOptimization(transaction_fee=0.003, env_num=4, vectorize=False)
-    # model = optimizer.load_from_file(
-    #     'ppo', path="data\RecurrentPPO_close_log_return_window_size_5_0.003\RecurrentPPO_240000_steps")
-    # test_result = optimizer.DRL_prediction(
-    #     model, test_data, ["close", "log_return"])
-    # from utils.plotting_helpers import plot_weights
-    # plot_weights(test_result[0].weights, test_result[0].date, test_result[1])
+    # optimizer.train_model(train_data,
+    #                       validation_data,
+    #                       features=["close", "log_return"],
+    #                       policy_network="MultiInputLstmPolicy",
+    #                       model_name="RecurrentPPO",
+    #                       window_size=5,
+    #                       iterations=1000_000)
+    model = optimizer.load_from_file(
+        'ppo', path="data\RecurrentPPO_close_log_return_window_size_5_0.003_wth_weith_state\RecurrentPPO_500000_steps")
+    test_result = optimizer.DRL_prediction(
+        model, test_data, ["close", "log_return"])
+    from utils.plotting_helpers import plot_weights
+    plot_weights(test_result[0].weights, test_result[0].date, test_result[1])
