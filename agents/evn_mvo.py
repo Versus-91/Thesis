@@ -170,10 +170,10 @@ class StockPortfolioEnv(gym.Env):
             return self.state, self.reward, self.terminal, False, self.info
 
         else:
-            if np.sum(actions) == 1 and np.min(actions) >= 0:
-                weights = actions
-            else:
-                weights = self.softmax_normalization(actions)
+            # if np.sum(actions) == 1 and np.min(actions) >= 0:
+            weights = actions
+            # else:
+            #     weights = self.softmax_normalization(actions)
             self.actions_memory.append(weights)
             last_day_memory = self.data
 
@@ -235,7 +235,7 @@ class StockPortfolioEnv(gym.Env):
         covs = self.data["cov_list"].values[0]
         state = np.array(covs)
         info = {
-            "data": self.df[self.df.time <= day],
+            "data": self.df[self.df.time == day],
             'before_last_weight': self.actions_memory[-2] if len(self.actions_memory) >= 2 else self.actions_memory[-1],
             'last_weight': self.actions_memory[-1]
         }

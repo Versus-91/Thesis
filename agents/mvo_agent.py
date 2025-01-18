@@ -62,8 +62,8 @@ class MarkowitzAgent:
         # unpack state to get covariance and means
         data = info["data"].copy()
         # from the data estimate returns and covariances
-        cov = data.iloc[-1].cov_list
-        mean_returns = data.iloc[-1].returns
+        cov = data.iloc[0].cov_list
+        mean_returns = data.iloc[0].returns
         ef = EfficientFrontier(mean_returns, cov, solver=self.solver)
         weights_last = info.get("last_weight")
 
@@ -80,8 +80,8 @@ class MarkowitzAgent:
         # get action. if using risk free rate then integrate it into the action
         action = list_weights
         # action = np.concatenate([weights, risk_free_weight.value])
-        action = np.maximum(action, 0)
-        action = action / np.sum(action)
+        # action = np.maximum(action, 0)
+        # action = action / np.sum(action)
         return action
 
     def prediction(self, environment):

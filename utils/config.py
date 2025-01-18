@@ -53,6 +53,7 @@ PPO_PARAMS = {
     "learning_rate": 0.00025,
     "batch_size": 64,
 }
+RECURRENTPPO_PARAMS = {}
 DDPG_PARAMS = {"batch_size": 128, "buffer_size": 50000, "learning_rate": 0.001}
 TD3_PARAMS = {"batch_size": 100,
               "buffer_size": 1000000, "learning_rate": 0.001}

@@ -1,19 +1,31 @@
+import random
 from matplotlib import pyplot as plt
 import pandas as pd
 import scienceplots
 
+from finrl.agents.stablebaselines3.models import DRLAgent, DRLEnsembleAgent
+from finrl.plot import backtest_stats, backtest_plot, get_daily_return, get_baseline, trx_plot
+from utils.feature_engineer import FeatureEngineer
+from models import DRLAgent
+from environements.portfolio_optimization_env import PortfolioOptimizationEnv
+import pandas as pd
+import numpy as np
+from finrl.meta.preprocessor.preprocessors import data_split
+from agents.evn_mvo import StockPortfolioEnv
+from agents.mvo_agent import MarkowitzAgent
+from pypfopt import expected_returns
 
-def plot_weights(result, add_cash, test_data):
-    w = pd.DataFrame(result['test'][0].weights.tolist())
-    columns = test_data.tic.unique().tolist()
+
+def plot_weights(weights, dates, tics, add_cash=True):
+    w = pd.DataFrame(weights.tolist())
+    columns = tics
     columns.append('date')
-    w['date'] = result['test'][0].date
+    w['date'] = dates
     if add_cash:
         w.columns = ['cash']+columns
     else:
         w.columns = columns
 
-    %matplotlib inline
     with plt.style.context('science', 'ieee'):
         fig, (ax_main, ax_legend) = plt.subplots(
             ncols=2,
@@ -32,6 +44,7 @@ def plot_weights(result, add_cash, test_data):
         # Adjust ncol for horizontal legend
         ax_legend.legend(handles, labels, loc='center', ncol=1)
         plt.tight_layout()
+        plt.savefig('./figures/'+str(random.randint(0, 1_000_000))+'.png')
 
 
 def plot_mvo_weights(mvo_result, test_data):
@@ -40,7 +53,6 @@ def plot_mvo_weights(mvo_result, test_data):
     unique_tics.append('date')
     w['date'] = mvo_result['date']
     w.columns = unique_tics
-    %matplotlib inline
     with plt.style.context('science', 'ieee'):
         fig, (ax_main, ax_legend) = plt.subplots(
             ncols=2,
@@ -59,6 +71,7 @@ def plot_mvo_weights(mvo_result, test_data):
         # Adjust ncol for horizontal legend
         ax_legend.legend(handles, labels, loc='center', ncol=1)
         plt.tight_layout()
+        plt.show()
 
 
 def plot_buy_and_hold_weights(env, test_data):
@@ -67,8 +80,6 @@ def plot_buy_and_hold_weights(env, test_data):
     columns.append('date')
     w['date'] = env._date_memory
     w.columns = ['Cash']+columns
-
-    %matplotlib inline
     with plt.style.context('science', 'ieee'):
         fig, (ax_main, ax_legend) = plt.subplots(
             ncols=2,

@@ -10,8 +10,8 @@ from sklearn.base import TransformerMixin
 from sklearn.preprocessing import MaxAbsScaler
 from stockstats import StockDataFrame as Sdf
 
-from finrl import config
-from finrl.meta.preprocessor.yahoodownloader import YahooDownloader
+from utils import config
+from utils.yahoo_downloader import YahooDownloader
 
 
 def load_dataset(*, file_name: str) -> pd.DataFrame:
@@ -248,7 +248,8 @@ class FeatureEngineer:
         """
         df = data.copy()
         df["return"] = df.groupby('tic')['close'].pct_change()
-        df["log_return"] = np.log(df['close'] / df.groupby('tic')['close'].shift(1))
+        df["log_return"] = np.log(
+            df['close'] / df.groupby('tic')['close'].shift(1))
 
         return df
 

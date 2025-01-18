@@ -22,7 +22,7 @@ def DRL_prediction(model, environment, time_window, deterministic=True):
         if i == max_steps:
             date_list = environment._date_memory
             portfolio_return = environment._portfolio_return_memory
-            df_account_value = pd.DataFrame(
+            result = pd.DataFrame(
                 {"date": date_list, "daily_return": portfolio_return,
                     'account':  environment._asset_memory["final"], 'weights': environment._final_weights}
             )
@@ -33,13 +33,13 @@ def DRL_prediction(model, environment, time_window, deterministic=True):
             df_actions = pd.DataFrame(action_list)
             tiks = environment._tic_list
             df_actions.index = df_date.date
-            account_memory = df_account_value
+            result_df = result
             actions_memory = df_actions
 
         if dones[0]:
             print("hit end!")
             break
-    return account_memory, actions_memory
+    return result_df, actions_memory
 
 
 def train_model(train_data, test_data, evaluation_data, transaction_fee=0.001, use_sharpe=False, use_dsr=False, use_sortino=False, model_name='a2c', iterations=100_000, save=True, load=False, tag='tag', features=["close", "log_return"], sharpe_reward=False, t=5, args=None, starting_capital=250_000, model_path=None,

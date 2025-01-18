@@ -1,3 +1,9 @@
+from utils.helpers import data_split
+from agents.evn_mvo import StockPortfolioEnv
+from agents.mvo_agent import MarkowitzAgent
+from pypfopt import expected_returns
+import pandas as pd
+
 def mvo_data(data, INDICATORS, TEST_START_DATE, TEST_END_DATE):
     final_result = []
     df = data.sort_values(['date', 'tic'], ignore_index=True).copy()
@@ -24,9 +30,11 @@ def mvo_data(data, INDICATORS, TEST_START_DATE, TEST_END_DATE):
         end=TEST_END_DATE
     )
     return test_df
-def mvo(data, solver='OSQP',window=1, rf=0.02, pct=0.001,objective='min_variance'):
+
+
+def mean_variance_optimization(data, solver='OSQP', window=1, rf=0.02, pct=0.001, objective='min_variance', multi_objective=False):
     result = {}
-    stock_dimension = len(data.tic.unique())
+    stock_dimension = len(data.loc[0].returns)
     state_space = stock_dimension
     env_kwargs = {
         "hmax": 100,
@@ -34,17 +42,21 @@ def mvo(data, solver='OSQP',window=1, rf=0.02, pct=0.001,objective='min_variance
         "transaction_cost_pct": pct,
         "state_space": state_space,
         "stock_dim": stock_dimension,
-        "tech_indicator_list": INDICATORS,
+        "tech_indicator_list": [],
         "action_space": stock_dimension,
         "reward_scaling": 1e-4,
-        "window":window
+        "window": window
 
     }
-    e_test_gym = StockPortfolioEnv(df=data, **env_kwargs)
-    agent = MarkowitzAgent(e_test_gym, rf=rf,objective=objective,cost=pct)
-    mvo_min_variance = agent.prediction(e_test_gym)
+    test_env = StockPortfolioEnv(df=data, **env_kwargs)
+    agent = MarkowitzAgent(test_env, rf=rf, objective=objective,
+                           cost=pct, multi_objective=multi_objective)
+    mvo_min_variance = agent.prediction(test_env)
     mvo_min_variance["method"] = "markowitz"
     mvo_min_variance.columns = ['date', 'account', 'return', 'method']
     result["test"] = mvo_min_variance
     result["name"] = 'Min Variance Portfolio'
+    result["action"] = test_env.actions_memory
+    result["date"] = test_env.date_memory
+
     return result
