@@ -68,10 +68,10 @@ def sample_ppo_params(trial: optuna.Trial) -> Dict[str, Any]:
 
     # Independent networks usually work best
     # when not working with images
-    net_arch = trial.suggest_categorical("net_arch", ["small", "medium"])
+    net_arch = trial.suggest_categorical("net_arch", ["small","medium"])
     net_arch = {
         "small": [dict(pi=[64, 64], vf=[64, 64])],
-        "medium": [dict(pi=[256, 256], vf=[256, 256])],
+        "medium": [dict(pi=[128, 128], vf=[128, 128])],
     }[net_arch]
     # net_arch_width = trial.suggest_categorical(
     #     "net_arch_width", [8, 16, 32, 64, 128, 256, 512])

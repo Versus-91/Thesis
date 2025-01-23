@@ -14,14 +14,21 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import StopTrainingOnNoModelImprovement
 from stable_baselines3.common.monitor import Monitor
 
-from utils.optuna.sample_params.ppo import sample_ppo_params
-from utils.optuna.sample_params.trial_eval_callback import TrialEvalCallback
-
+from utils.optuna.ppo import sample_ppo_params
+from utils.optuna.trial_eval_callback import TrialEvalCallback
+from utils.portfolio_trainer import PortfolioOptimization
+from sb3_contrib import RecurrentPPO
+from stable_baselines3 import A2C
+from stable_baselines3 import DDPG
+from stable_baselines3 import PPO
+from stable_baselines3 import SAC
+from stable_baselines3 import TD3
+import data_processor
 FLAGS = flags.FLAGS
 FLAGS(sys.argv)
 
 
-study_path = "minigames/move_to_beacon/optuna/4"
+study_path = "./studies/optuna"
 
 
 def objective(trial: optuna.Trial) -> float:
@@ -33,18 +40,26 @@ def objective(trial: optuna.Trial) -> float:
 
     sampled_hyperparams = sample_ppo_params(trial)
 
+    portfolio_optimizer = PortfolioOptimization(
+        transaction_fee=0.003, last_weight=False, vectorize=False)
+    train_data, test_data, eval_data = data_processor.get_data()
+    env_train = portfolio_optimizer.create_environment(
+        train_data, ["close", "log_return"], window=5)
+    env_evaluation = portfolio_optimizer.create_environment(
+        test_data, ["close", "log_return"], window=5)
+
     path = f"{study_path}/trial_{str(trial.number)}"
     os.makedirs(path, exist_ok=True)
 
     # env = MoveToBeaconEnv(**env_kwargs)
-    env = Monitor(env)
-    model = PPO("MlpPolicy", env=env, seed=None, verbose=0,
+    
+    model = PPO("MlpPolicy", env=env_train, seed=None, verbose=0,
                 tensorboard_log=path, **sampled_hyperparams)
 
     stop_callback = StopTrainingOnNoModelImprovement(
         max_no_improvement_evals=30, min_evals=50, verbose=1)
     eval_callback = TrialEvalCallback(
-        env, trial, best_model_save_path=path, log_path=path,
+        env_evaluation, trial, best_model_save_path=path, log_path=path,
         n_eval_episodes=2, eval_freq=10000, deterministic=False, callback_after_eval=stop_callback
     )
 
@@ -53,10 +68,10 @@ def objective(trial: optuna.Trial) -> float:
         f.write(str(params))
 
     try:
-        model.learn(100_000, callback=eval_callback)
-        env.close()
+        model.learn(500_000, callback=eval_callback)
+        env_train.close()
     except (AssertionError, ValueError) as e:
-        env.close()
+        env_train.close()
         print(e)
         print("============")
         print("Sampled params:")
