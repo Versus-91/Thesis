@@ -18,6 +18,7 @@ class PortfolioOptimization:
         comission_fee_model="trf",
         normalize=None,
         last_weight=True,
+        sharp_reward=False,
         remove_close=True,
         env_num=4,
         tag='',
@@ -30,6 +31,7 @@ class PortfolioOptimization:
         self.last_weight = last_weight
         self.remove_close = remove_close
         self.env_num = env_num
+        self.sharp_reward = sharp_reward
         self.vectorize = vectorize
         self.tag = tag
 
@@ -47,6 +49,7 @@ class PortfolioOptimization:
             "features": features,
             "comission_fee_pct": self.transaction_fee,
             "time_window": window,
+            "sharpe_reward": self.sharp_reward,
             "normalize_df": self.normalize,
             "comission_fee_model": self.comission_fee_model,
             "return_last_action": self.last_weight,
@@ -85,6 +88,7 @@ class PortfolioOptimization:
         features=["close", "log_return"],
         policy_network="MlpPolicy",
         args=None,
+        policy_kwargs=None,
         window_size=5
     ):
 
@@ -98,7 +102,8 @@ class PortfolioOptimization:
         model_agent = agent.get_model(
             model_name,
             policy=policy_network,
-            tensorboard_log="./tensorboard_log/tensorboardlog_" + path_post_fix,
+            policy_kwargs=policy_kwargs,
+            tensorboard_log="./tensorboard_log/" + path_post_fix,
             model_kwargs=args,
         )
 
@@ -111,7 +116,7 @@ class PortfolioOptimization:
         eval_callback = EvalCallback(
             evaluation_environment,
             best_model_save_path="./data/"+model_name+"_"+path_post_fix + "best",
-            log_path="./tensorboard_log/tensorboardlog_" + path_post_fix,
+            log_path="./tensorboard_log/" + path_post_fix,
             eval_freq=10000,
             deterministic=True,
             render=False,

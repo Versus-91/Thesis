@@ -132,11 +132,15 @@ class StockPortfolioEnv(gym.Env):
 
         # memorize portfolio value each step
         self.asset_memory = [self.initial_amount]
+        self.variance_memory = []
         # memorize portfolio return each step
         self.portfolio_return_memory = [0]
         self.date_memory = [day]
 
     def step(self, actions):
+        actions = actions[0]
+        portfolio_variance = actions[1]
+
         self.terminal = self.time_index >= len(self.sorted_times) - self.window
 
         if self.terminal:
@@ -175,6 +179,7 @@ class StockPortfolioEnv(gym.Env):
             # else:
             #     weights = self.softmax_normalization(actions)
             self.actions_memory.append(weights)
+            self.variance_memory.append(portfolio_variance)
             last_day_memory = self.data
 
             # load next state
@@ -183,7 +188,8 @@ class StockPortfolioEnv(gym.Env):
             fees = 0
             self.state, self.info = self.get_state_and_info_from_day(day)
             if self.transaction_cost_pct != 0:
-                delta_weights = weights - self.actions_memory[-2]
+                delta_weights = (np.array(weights) -
+                                 np.array(self.actions_memory[-2]))
                 # delta_assets = delta_weights[1:]  # disconsider
                 # calculate fees considering weights modification
                 diff = np.sum(np.abs(delta_weights * self.portfolio_value))

@@ -37,11 +37,7 @@ class MarkowitzAgent:
         self.solver = solver
         self.rf = rf
         self.objective = objective
-        self.multi_objective=multi_objective
-        # compute daily risk free rate from annual risk free rate
-        # self.risk_free_rate = (1 + annual_risk_free_rate) ** (1 / 365) - 1
-        # disable risk free rate for now
-        self.risk_free_rate = -1
+        self.multi_objective = multi_objective
 
     def get_model(self, model_name, model_kwargs):
         raise NotImplementedError()
@@ -82,7 +78,8 @@ class MarkowitzAgent:
         # action = np.concatenate([weights, risk_free_weight.value])
         # action = np.maximum(action, 0)
         # action = action / np.sum(action)
-        return action
+        variance = objective_functions.portfolio_variance(list_weights, cov)
+        return (action, variance)
 
     def prediction(self, environment):
         # args = Arguments(env=environment)

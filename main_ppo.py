@@ -87,17 +87,28 @@ if __name__ == '__main__':
     print(f"Stock Dimension: {stock_dimension}")
 
     optimizer = PortfolioOptimization(
-        transaction_fee=0.003, vectorize=False,tag="wth_weith_state")
-    # optimizer.train_model(train_data,
-    #                       validation_data,
-    #                       features=["close", "log_return"],
-    #                       policy_network="MultiInputLstmPolicy",
-    #                       model_name="RecurrentPPO",
-    #                       window_size=5,
-    #                       iterations=1000_000)
-    model = optimizer.load_from_file(
-        'ppo', path="data\RecurrentPPO_close_log_return_window_size_5_0.003_wth_weith_state\RecurrentPPO_500000_steps")
-    test_result = optimizer.DRL_prediction(
-        model, test_data, ["close", "log_return"])
-    from utils.plotting_helpers import plot_weights
-    plot_weights(test_result[0].weights, test_result[0].date, test_result[1])
+        transaction_fee=0.003, vectorize=False, tag="with_weight_state_128_128_net", sharp_reward=True)
+    optimizer.train_model(train_data,
+                          validation_data,
+                          features=["close", "log_return"],
+                          policy_network="MultiInputPolicy",
+                          model_name="ppo",
+                          window_size=5,
+                          policy_kwargs=dict(
+                              net_arch=[
+                                  dict(pi=[128, 128], vf=[128, 128])
+                              ]
+                          ),
+                          args={
+                              "n_steps": 2048,
+                              "ent_coef": 0.02,
+                              "learning_rate": 3e-4,
+                              "batch_size": 256,
+                          },
+                          iterations=1000_000)
+    # model = optimizer.load_from_file(
+    #     'ppo', path="data\RecurrentPPO_close_log_return_window_size_5_0.003_wth_weith_state\RecurrentPPO_500000_steps")
+    # test_result = optimizer.DRL_prediction(
+    #     model, test_data, ["close", "log_return"])
+    # from utils.plotting_helpers import plot_weights
+    # plot_weights(test_result[0].weights, test_result[0].date, test_result[1])

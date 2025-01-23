@@ -87,7 +87,7 @@ if __name__ == '__main__':
     print(f"Stock Dimension: {stock_dimension}")
 
     optimizer = PortfolioOptimization(
-        transaction_fee=0.003, vectorize=False,tag="wth_weith_state")
+        transaction_fee=0.003, vectorize=False,tag="wth_weight_state_sharpe_reward",sharp_reward=True)
     # optimizer.train_model(train_data,
     #                       validation_data,
     #                       features=["close", "log_return"],
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     #                       window_size=5,
     #                       iterations=1000_000)
     model = optimizer.load_from_file(
-        'ppo', path="data\RecurrentPPO_close_log_return_window_size_5_0.003_wth_weith_state\RecurrentPPO_500000_steps")
+        'ppo', path="data\RecurrentPPO_close_log_return_window_size_5_0.003_wth_weight_state_sharpe_reward\RecurrentPPO_140000_steps")
     test_result = optimizer.DRL_prediction(
         model, test_data, ["close", "log_return"])
     from utils.plotting_helpers import plot_weights

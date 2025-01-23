@@ -210,20 +210,19 @@ class PortfolioOptimizationEnv(gym.Env):
         self._portfolio_value = self._initial_amount
         self._terminal = False
 
-    def add_return(self, value):
-        self.return_vector[self.index] = value
-        self.index = (self.index + 1) % self.buffer_size
-        self.count = min(self.count + 1, self.buffer_size)
-
-    def get_sharpe_ratio(self, risk_free_rate=0.0):
-        if self.count == 0:
+    def get_sharpe_ratio(self, eta=0.01):
+        if len(self._portfolio_reward_memory) < 3:
             return 0
-        valid_data = self.return_vector[:self.count] if self.count < self.buffer_size else self.return_vector
-        mean_return = np.mean(valid_data)
-        std_return = np.std(valid_data)
-        sharpe_ratio = (mean_return - risk_free_rate) / \
-            std_return if std_return > 0 else 0
-        return sharpe_ratio
+        log_returns = np.array(self._portfolio_reward_memory[-252:])
+        A = np.mean(log_returns[:-1])
+        B = np.mean(log_returns[:-1]**2)
+        delta_A = log_returns[-1] - A
+        delta_B = log_returns[-1]**2 - B
+        Dt = (B*delta_A - (0.5*A*delta_B)) / (B-A**2)**(3/2)
+        if math.isnan(Dt):
+            Dt = 0
+            print("Nan sharpe ratio",)
+        return Dt*eta
 
     def step(self, actions):
         """Performs a simulation step.
@@ -395,13 +394,13 @@ class PortfolioOptimizationEnv(gym.Env):
             # save portfolio return memory
             self._portfolio_return_memory.append(portfolio_return)
             self._portfolio_reward_memory.append(portfolio_reward)
-            self.add_return(portfolio_return)
             # Define portfolio return
             if self.sharpe_reward:
                 sharpe_ratio = self.get_sharpe_ratio()
+                self._portfolio_sharpe_memory.append(sharpe_ratio)
                 self._reward = sharpe_ratio
             else:
-                self._reward = portfolio_reward + overtrade_penalty
+                self._reward = portfolio_reward
 
             self._reward = self._reward * self._reward_scaling
 
@@ -592,6 +591,7 @@ class PortfolioOptimizationEnv(gym.Env):
         # memorize portfolio return and reward each step
         self._portfolio_return_memory = [0]
         self._portfolio_reward_memory = [0]
+        self._portfolio_sharpe_memory = [0]
         # initial action: all money is allocated in cash
         self._actions_memory = [
             np.array([1] + [0] * self.portfolio_size, dtype=np.float32)
