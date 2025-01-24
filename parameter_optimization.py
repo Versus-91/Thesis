@@ -28,7 +28,7 @@ FLAGS = flags.FLAGS
 FLAGS(sys.argv)
 
 
-study_path = "./studies/optuna2"
+study_path = "./studies/optuna3"
 
 
 def objective(trial: optuna.Trial) -> float:
@@ -52,7 +52,8 @@ def objective(trial: optuna.Trial) -> float:
     os.makedirs(path, exist_ok=True)
 
     # env = MoveToBeaconEnv(**env_kwargs)
-
+    env_train = Monitor(env_train)
+    env_evaluation = Monitor(env_evaluation)
     model = PPO("MlpPolicy", env=env_train, seed=None, verbose=0,
                 tensorboard_log=path, **sampled_hyperparams)
 
@@ -104,7 +105,7 @@ if __name__ == "__main__":
     )
 
     try:
-        study.optimize(objective, n_jobs=-1, n_trials=128)
+        study.optimize(objective, n_jobs=2, n_trials=128)
     except KeyboardInterrupt:
         pass
 
