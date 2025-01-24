@@ -28,7 +28,7 @@ FLAGS = flags.FLAGS
 FLAGS(sys.argv)
 
 
-study_path = "./studies/optuna"
+study_path = "./studies/optuna2"
 
 
 def objective(trial: optuna.Trial) -> float:
@@ -52,7 +52,7 @@ def objective(trial: optuna.Trial) -> float:
     os.makedirs(path, exist_ok=True)
 
     # env = MoveToBeaconEnv(**env_kwargs)
-    
+
     model = PPO("MlpPolicy", env=env_train, seed=None, verbose=0,
                 tensorboard_log=path, **sampled_hyperparams)
 
@@ -96,6 +96,7 @@ if __name__ == "__main__":
     pruner = MedianPruner(n_startup_trials=10, n_warmup_steps=10)
 
     study = optuna.create_study(
+        storage="sqlite:///db.sqlite3",
         sampler=sampler,
         pruner=pruner,
         load_if_exists=True,
@@ -103,7 +104,7 @@ if __name__ == "__main__":
     )
 
     try:
-        study.optimize(objective, n_jobs=4, n_trials=128)
+        study.optimize(objective, n_jobs=-1, n_trials=128)
     except KeyboardInterrupt:
         pass
 

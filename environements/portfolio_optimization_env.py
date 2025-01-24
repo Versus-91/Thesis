@@ -334,7 +334,6 @@ class PortfolioOptimizationEnv(gym.Env):
             )
 
             # if using weights vector modifier, we need to modify weights vector
-            overtrade_penalty = 0
             if self._comission_fee_model == "wvm":
                 delta_weights = weights - last_weights
                 delta_assets = delta_weights[1:]  # disconsider
@@ -342,7 +341,6 @@ class PortfolioOptimizationEnv(gym.Env):
                 fees = np.sum(np.abs(delta_assets * self._portfolio_value))
                 if fees > weights[0] * self._portfolio_value:
                     weights = last_weights
-                    overtrade_penalty = -10
                     # maybe add negative reward
                 else:
                     portfolio = weights * self._portfolio_value

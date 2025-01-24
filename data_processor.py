@@ -13,10 +13,9 @@ df_sp500 = read_csv('./data/sp500.csv')
 
 
 def get_data():
-    df_dow = read_csv('./data/dow.csv')
-    df = df_dow.copy()
-    df = df_dow[df_dow.tic.isin(
-        ['AAPL', 'AXP', 'DIS', 'GS', 'IBM', 'MMM', 'WBA'])]
+    df_dax = read_csv('./data/dax.csv')
+    df = df_dax[df_dax.tic.isin(
+        ['ADS.DE', 'ALV.DE', 'BAS.DE', 'BAYN.DE', 'BMW.DE', 'CON.DE', 'DBK.DE', 'DTE.DE', 'EOAN.DE', 'FME.DE', 'LIN.DE', 'VOW3.DE'])]
     TRAIN_START_DATE = '2014-01-01'
     TRAIN_END_DATE = '2019-12-30'
 
