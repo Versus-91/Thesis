@@ -28,7 +28,7 @@ except ModuleNotFoundError:
     )
 
 
-class PortfolioOptimizationEnv(gym.Env):
+class PortfolioOptimizationEnv(gymnasium.Env):
     """A portfolio allocation environment for OpenAI gym.
 
     This environment simulates the interactions between an agent and the financial market
@@ -410,7 +410,8 @@ class PortfolioOptimizationEnv(gym.Env):
             return self._state, self._reward, self._terminal, False, self._info
         return self._state, self._reward, self._terminal, self._info
 
-    def reset(self):
+    def reset(self, seed=142):
+        super().reset(seed=seed)
         """Resets the environment and returns it to its initial state (the
         fist date of the dataframe).
 

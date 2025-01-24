@@ -54,7 +54,7 @@ def objective(trial: optuna.Trial) -> float:
     # env = MoveToBeaconEnv(**env_kwargs)
     env_train = Monitor(env_train)
     env_evaluation = Monitor(env_evaluation)
-    model = PPO("MlpPolicy", env=env_train, seed=None, verbose=0,
+    model = PPO("MlpPolicy", env=env_train, seed=142, verbose=0, device='cpu',
                 tensorboard_log=path, **sampled_hyperparams)
 
     stop_callback = StopTrainingOnNoModelImprovement(
