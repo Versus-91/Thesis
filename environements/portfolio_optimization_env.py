@@ -7,12 +7,12 @@ import matplotlib.pyplot as plt
 
 import math
 
-import gym
+import gymnasium
 import matplotlib
 import numpy as np
 import pandas as pd
-from gym import spaces
-from gym.utils import seeding
+from gymnasium import spaces
+from gymnasium.utils import seeding
 
 matplotlib.use("Agg")
 
@@ -78,7 +78,7 @@ class PortfolioOptimizationEnv(gym.Env):
         return_last_action=False,
         normalize_df="by_previous_time",
         remove_close_from_state=True,
-        comission_fee_model="trf",
+        comission_fee_model="vmw",
         reward_scaling=1,
         comission_fee_pct=0,
         features=["close", "high", "low"],
@@ -90,7 +90,7 @@ class PortfolioOptimizationEnv(gym.Env):
         tics_in_portfolio="all",
         time_window=1,
         cwd="./",
-        new_gym_api=False,
+        new_gym_api=True,
     ):
         """Initializes environment's instance.
 
@@ -332,15 +332,18 @@ class PortfolioOptimizationEnv(gym.Env):
             self._state, self._info = self._get_state_and_info_from_time_index(
                 self._time_index
             )
-
+            negative_fee_penalty = 0
             # if using weights vector modifier, we need to modify weights vector
             if self._comission_fee_model == "wvm":
                 delta_weights = weights - last_weights
                 delta_assets = delta_weights[1:]  # disconsider
                 # calculate fees considering weights modification
-                fees = np.sum(np.abs(delta_assets * self._portfolio_value))
+                fees = np.sum(
+                    np.abs(delta_assets * self._portfolio_value)) * self._comission_fee_pct
                 if fees > weights[0] * self._portfolio_value:
+                    print("Trade without enough cash.")
                     weights = last_weights
+                    negative_fee_penalty = -1
                     # maybe add negative reward
                 else:
                     portfolio = weights * self._portfolio_value
@@ -400,7 +403,8 @@ class PortfolioOptimizationEnv(gym.Env):
             else:
                 self._reward = portfolio_reward
 
-            self._reward = self._reward * self._reward_scaling
+            self._reward = (self._reward * self._reward_scaling) + \
+                negative_fee_penalty
 
         if self._new_gym_api:
             return self._state, self._reward, self._terminal, False, self._info
