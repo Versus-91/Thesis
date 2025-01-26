@@ -100,7 +100,7 @@ if __name__ == '__main__':
                               ]
                           ),
                           args={
-                              "n_steps": 2048,
+                              "n_steps": 256,
                               "ent_coef": 0.02,
                               "learning_rate": 3e-4,
                               "batch_size": 256,

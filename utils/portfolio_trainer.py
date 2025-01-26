@@ -15,11 +15,12 @@ class PortfolioOptimization:
         self,
         transaction_fee=0.001,
         starting_capital=250_000,
-        comission_fee_model="trf",
+        comission_fee_model="wvm",
         normalize=None,
         last_weight=True,
         sharp_reward=False,
         remove_close=True,
+        add_cash=True,
         env_num=4,
         tag='',
         vectorize=False
@@ -34,6 +35,7 @@ class PortfolioOptimization:
         self.sharp_reward = sharp_reward
         self.vectorize = vectorize
         self.tag = tag
+        self.add_cash = add_cash
 
     def make_env(self, rank, data, args):
         def _f():
@@ -53,6 +55,7 @@ class PortfolioOptimization:
             "normalize_df": self.normalize,
             "comission_fee_model": self.comission_fee_model,
             "return_last_action": self.last_weight,
+            "add_cash": self.add_cash,
             "remove_close_from_state": self.remove_close,
         }
         if self.vectorize:
@@ -117,8 +120,9 @@ class PortfolioOptimization:
             evaluation_environment,
             best_model_save_path="./data/"+model_name+"_"+path_post_fix + "best",
             log_path="./tensorboard_log/" + path_post_fix,
-            eval_freq=10000,
+            eval_freq=5000,
             deterministic=True,
+            n_eval_episodes=1,
             render=False,
         )
         model = agent.train_model(model=model_agent,

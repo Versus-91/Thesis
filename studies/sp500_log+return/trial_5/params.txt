@@ -1,0 +1,1 @@
+{'n_steps': 512, 'batch_size': 512, 'gamma': 0.995, 'learning_rate': 0.7055603633628055, 'ent_coef': 1.1497212580084593e-08, 'clip_range': 0.4, 'n_epochs': 1, 'gae_lambda': 1.0, 'max_grad_norm': 0.5, 'vf_coef': 0.12211027197056934, 'policy_kwargs': {'net_arch': {'pi': [128, 128], 'vf': [128, 128]}, 'activation_fn': <class 'torch.nn.modules.activation.ReLU'>, 'ortho_init': False}}

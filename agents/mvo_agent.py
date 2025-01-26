@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 from pypfopt import EfficientFrontier, objective_functions
+from pypfopt.cla import CLA
 
 
 class MarkowitzAgent:
@@ -67,18 +68,25 @@ class MarkowitzAgent:
             ef.add_objective(objective_functions.transaction_cost,
                              w_prev=weights_last, k=self.transaction_cost)
         if self.objective == 'min_variance':
-            ef.min_volatility()
-        else:
-            ef.max_sharpe(risk_free_rate=self.rf)
+            # ef.min_volatility()
+            # weights = ef.clean_weights()
+            cla = CLA(mean_returns, cov)
+            cla.min_volatility()
+            weights = cla.clean_weights()
 
-        weights = ef.clean_weights()
+        else:
+            cla = CLA(mean_returns, cov)
+            cla.max_sharpe()
+            weights = cla.clean_weights()
+
         list_weights = list(weights.values())
         # get action. if using risk free rate then integrate it into the action
         action = list_weights
         # action = np.concatenate([weights, risk_free_weight.value])
         # action = np.maximum(action, 0)
         # action = action / np.sum(action)
-        variance = objective_functions.portfolio_variance(list_weights, cov)
+        w = np.array(list_weights)
+        variance = np.dot(w.T, np.dot(cov , w))
         return (action, variance)
 
     def prediction(self, environment):
@@ -95,6 +103,7 @@ class MarkowitzAgent:
         history["date"].append(day)
         history["total_assets"].append(total_asset)
         history["episode_return"].append(0)
+        
         # episode_total_assets.append(environment.initial_amount)
         done = False
         while not done:

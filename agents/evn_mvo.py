@@ -132,15 +132,14 @@ class StockPortfolioEnv(gym.Env):
 
         # memorize portfolio value each step
         self.asset_memory = [self.initial_amount]
-        self.variance_memory = []
+        self.variance_memory = [0]
         # memorize portfolio return each step
         self.portfolio_return_memory = [0]
         self.date_memory = [day]
 
     def step(self, actions):
-        actions = actions[0]
         portfolio_variance = actions[1]
-
+        actions = actions[0]
         self.terminal = self.time_index >= len(self.sorted_times) - self.window
 
         if self.terminal:
@@ -179,7 +178,6 @@ class StockPortfolioEnv(gym.Env):
             # else:
             #     weights = self.softmax_normalization(actions)
             self.actions_memory.append(weights)
-            self.variance_memory.append(portfolio_variance)
             last_day_memory = self.data
 
             # load next state
@@ -206,6 +204,7 @@ class StockPortfolioEnv(gym.Env):
             # save into memory
             self.portfolio_return_memory.append(portfolio_return)
             self.date_memory.append(day)
+            self.variance_memory.append(portfolio_variance)
             self.asset_memory.append(new_portfolio_value)
 
             # the reward is the new portfolio value or end portfolo value

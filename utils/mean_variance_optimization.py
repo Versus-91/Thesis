@@ -4,6 +4,7 @@ from agents.mvo_agent import MarkowitzAgent
 from pypfopt import expected_returns
 import pandas as pd
 
+
 def mvo_data(data, INDICATORS, TEST_START_DATE, TEST_END_DATE):
     final_result = []
     df = data.sort_values(['date', 'tic'], ignore_index=True).copy()
@@ -52,11 +53,9 @@ def mean_variance_optimization(data, solver='OSQP', window=1, rf=0.02, pct=0.001
     agent = MarkowitzAgent(test_env, rf=rf, objective=objective,
                            cost=pct, multi_objective=multi_objective)
     mvo_min_variance = agent.prediction(test_env)
-    mvo_min_variance["method"] = "markowitz"
-    mvo_min_variance.columns = ['date', 'account', 'return', 'method']
-    result["test"] = mvo_min_variance
     result["name"] = 'Min Variance Portfolio'
     result["action"] = test_env.actions_memory
     result["date"] = test_env.date_memory
+    result["variance"] = test_env.variance_memory
 
     return result

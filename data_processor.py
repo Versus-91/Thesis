@@ -5,17 +5,29 @@ from utils.helpers import data_split
 import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
+import warnings
 df_dow = read_csv('./data/dow.csv')
 df_nasdaq = read_csv('./data/nasdaq.csv')
 df_hsi = read_csv('./data/hsi.csv')
 df_dax = read_csv('./data/dax.csv')
 df_sp500 = read_csv('./data/sp500.csv')
+warnings.filterwarnings("ignore")
+
+def add_volatility(df, periods=21):
+    rolling_volatility = df.groupby(
+        'tic')['log_return'].rolling(window=periods).std()
+    rolling_volatility = rolling_volatility.reset_index(level=0, drop=True)
+    # Assign the annualized volatility back to the original DataFrame
+    df['volatility'] = rolling_volatility
+
+
+    return df
 
 
 def get_data():
-    df_dax = read_csv('./data/dax.csv')
-    df = df_dax[df_dax.tic.isin(
-        ['ADS.DE', 'ALV.DE', 'BAS.DE', 'BAYN.DE', 'BMW.DE', 'CON.DE', 'DBK.DE', 'DTE.DE', 'EOAN.DE', 'FME.DE', 'LIN.DE', 'VOW3.DE'])]
+    df_sp500 = read_csv('./data/sp500.csv')
+    df = df_sp500[df_sp500.tic.isin(
+        ['PG', 'BA', 'NKE', 'JPM', 'MCD', 'TRV', 'UNH', 'SHW', 'VZ'])]
     TRAIN_START_DATE = '2014-01-01'
     TRAIN_END_DATE = '2019-12-30'
 
@@ -36,6 +48,7 @@ def get_data():
 
     processed_dax = fe.preprocess_data(df.query('date>"2013-01-01"'))
     cleaned_data = processed_dax.copy()
+    cleaned_data = add_volatility(cleaned_data)
     cleaned_data = cleaned_data.fillna(0)
     cleaned_data = cleaned_data.replace(np.inf, 0)
     train_data = data_split(cleaned_data, TRAIN_START_DATE, TRAIN_END_DATE)
