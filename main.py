@@ -87,7 +87,7 @@ if __name__ == '__main__':
     print(f"Stock Dimension: {stock_dimension}")
 
     optimizer = PortfolioOptimization(
-        transaction_fee=0.003, vectorize=False,tag="wth_weith_state")
+        transaction_fee=0.003, vectorize=False,tag="wth_weith_state",comission_fee_model='trf')
     # optimizer.train_model(train_data,
     #                       validation_data,
     #                       features=["close", "log_return"],

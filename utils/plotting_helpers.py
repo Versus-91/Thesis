@@ -11,7 +11,7 @@ def plot_weights(weights, dates, tics, add_cash=True):
     columns.append('date')
     w['date'] = dates
     if add_cash:
-        w.columns = ['cash']+columns
+        w.columns = ['CASH']+columns
     else:
         w.columns = columns
 
