@@ -33,6 +33,7 @@ class DifferentialSharpeRatio:
         return np.finfo('float64').eps
 
     def update(self, rt):
+        rt = rt * 0.001
         dsr = calculate_dsr(rt, self.last_vt, self.last_wt)
         d3r_cond1, d3r_cond2 = calculate_d3r(rt, self.last_vt, self.last_ddt)
         d3r = d3r_cond1 if rt > 0 else d3r_cond2

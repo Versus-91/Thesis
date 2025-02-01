@@ -29,7 +29,7 @@ warnings.filterwarnings("ignore")
 
 FLAGS = flags.FLAGS
 FLAGS(sys.argv)
-df_dow = read_csv('./data/dow.csv')
+df_dow = read_csv('./dataset/dow.csv')
 
 
 study_path = "./studies/s1"
