@@ -9,11 +9,7 @@ import numpy as np
 import warnings
 warnings.filterwarnings("ignore")
 
-df_dow = read_csv('./data/dow.csv')
-df_nasdaq = read_csv('./data/nasdaq.csv')
-df_hsi = read_csv('./data/hsi.csv')
-df_dax = read_csv('./data/dax.csv')
-df_sp500 = read_csv('./data/sp500.csv')
+
 
 
 def add_volatility(df, periods=21):

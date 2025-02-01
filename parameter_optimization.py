@@ -29,7 +29,7 @@ warnings.filterwarnings("ignore")
 
 FLAGS = flags.FLAGS
 FLAGS(sys.argv)
-df_dow = read_csv('./dataset/dow.csv')
+df_dax = read_csv('./dataset/dax.csv')
 
 
 study_path = "./studies/s1"
@@ -43,8 +43,9 @@ def objective(trial: optuna.Trial) -> float:
     # env_kwargs = {"step_mul": step_mul}
 
     sampled_hyperparams = sample_ppo_params(trial)
-    df = df_dow.copy()
-    df = df_dow[df_dow.tic.isin(['AAPL', 'AXP', 'DIS', 'GS', 'MMM', 'WBA'])]
+    df = df_dax.copy()
+    df = df[df.tic.isin(['ADS.DE', 'ALV.DE', 'BAS.DE', 'BAYN.DE',
+                        'BMW.DE', 'CON.DE', 'DBK.DE', 'DTE.DE', 'EOAN.DE'])]
     portfolio_optimizer = PortfolioOptimization(
         transaction_fee=0.003, env=PortfolioOptimizationEnvFlat, last_weight=False)
     train_data, test_data, eval_data = data_processor.get_data(df)
