@@ -57,5 +57,6 @@ def mean_variance_optimization(data, solver='OSQP', window=1, rf=0.02, pct=0.001
     result["action"] = test_env.actions_memory
     result["date"] = test_env.date_memory
     result["variance"] = test_env.variance_memory
+    result["test"] = mvo_min_variance
 
     return result

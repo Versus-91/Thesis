@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from utils.portfolio_trainer import PortfolioOptimization
 from pandas import read_csv
 from utils.feature_engineer import FeatureEngineer
@@ -6,12 +7,14 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
 import warnings
+warnings.filterwarnings("ignore")
+
 df_dow = read_csv('./data/dow.csv')
 df_nasdaq = read_csv('./data/nasdaq.csv')
 df_hsi = read_csv('./data/hsi.csv')
 df_dax = read_csv('./data/dax.csv')
 df_sp500 = read_csv('./data/sp500.csv')
-warnings.filterwarnings("ignore")
+
 
 def add_volatility(df, periods=21):
     rolling_volatility = df.groupby(
@@ -20,22 +23,23 @@ def add_volatility(df, periods=21):
     # Assign the annualized volatility back to the original DataFrame
     df['volatility'] = rolling_volatility
 
-
     return df
 
 
-def get_data():
-    df_sp500 = read_csv('./data/sp500.csv')
-    df = df_sp500[df_sp500.tic.isin(
-        ['PG', 'BA', 'NKE', 'JPM', 'MCD', 'TRV', 'UNH', 'SHW', 'VZ'])]
-    TRAIN_START_DATE = '2014-01-01'
-    TRAIN_END_DATE = '2019-12-30'
+def get_data(df, train_start='2014-01-01', train_end='2019-12-30', validation_start='2020-01-01', validation_end='2020-12-30', test_start='2021-01-01', test_end='2024-10-01'):
 
-    VALIDATION_START_DATE = '2020-01-01'
-    VALIDATION_END_DATE = '2020-12-30'
+    date_format = '%Y-%m-%d'
 
-    TEST_START_DATE = '2021-01-01'
-    TEST_END_DATE = '2024-10-01'
+    # Convert the string to a datetime object
+    start_date = datetime.strptime(train_start, date_format)
+
+    # Subtract one year
+    # Use timedelta(days=365) for a rough estimate, or handle leap years properly
+    try:
+        start_date_year_before = start_date.replace(year=start_date.year - 1)
+    except ValueError:  # Handles February 29 cases
+        start_date_year_before = start_date.replace(
+            month=2, day=28, year=start_date.year - 1)
     INDICATORS = [
         "close_21_ema",
         "close_62_ema"
@@ -46,15 +50,16 @@ def get_data():
                          use_turbulence=False,
                          user_defined_feature=True)
 
-    processed_dax = fe.preprocess_data(df.query('date>"2013-01-01"'))
+    processed_dax = fe.preprocess_data(
+        df.query(f'date>"{start_date_year_before}"'))
     cleaned_data = processed_dax.copy()
     cleaned_data = add_volatility(cleaned_data)
     cleaned_data = cleaned_data.fillna(0)
     cleaned_data = cleaned_data.replace(np.inf, 0)
-    train_data = data_split(cleaned_data, TRAIN_START_DATE, TRAIN_END_DATE)
-    test_data = data_split(cleaned_data, TEST_START_DATE, TEST_END_DATE)
+    train_data = data_split(cleaned_data, train_start, train_end)
+    test_data = data_split(cleaned_data, test_start, test_end)
     validation_data = data_split(
-        cleaned_data, VALIDATION_START_DATE, VALIDATION_END_DATE)
+        cleaned_data, validation_start, validation_end)
     stock_dimension = len(train_data.tic.unique())
     print(f"Stock Dimension: {stock_dimension}")
     return train_data, test_data, validation_data

@@ -68,11 +68,11 @@ class MarkowitzAgent:
             ef.add_objective(objective_functions.transaction_cost,
                              w_prev=weights_last, k=self.transaction_cost)
         if self.objective == 'min_variance':
-            # ef.min_volatility()
-            # weights = ef.clean_weights()
-            cla = CLA(mean_returns, cov)
-            cla.min_volatility()
-            weights = cla.clean_weights()
+            ef.min_volatility()
+            weights = ef.clean_weights()
+            # cla = CLA(mean_returns, cov)
+            # cla.min_volatility()
+            # weights = cla.clean_weights()
 
         else:
             cla = CLA(mean_returns, cov)

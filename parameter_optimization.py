@@ -1,3 +1,21 @@
+import data_processor
+from stable_baselines3 import TD3
+from stable_baselines3 import SAC
+from stable_baselines3 import DDPG
+from stable_baselines3 import A2C
+from sb3_contrib import RecurrentPPO
+from utils.portfolio_trainer import PortfolioOptimization
+from utils.optuna.trial_eval_callback import TrialEvalCallback
+from utils.optuna.ppo import sample_ppo_params
+from environements.portfolio_optimization_env_flat import PortfolioOptimizationEnvFlat
+from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.callbacks import StopTrainingOnNoModelImprovement
+from stable_baselines3 import PPO
+from optuna.visualization import plot_optimization_history, plot_param_importances, plot_parallel_coordinate
+from optuna.samplers import TPESampler
+from optuna.pruners import MedianPruner
+from absl import flags
+import optuna
 import os
 import pickle as pkl
 import random
@@ -5,30 +23,16 @@ import sys
 import time
 from pprint import pprint
 
-import optuna
-from absl import flags
-from optuna.pruners import MedianPruner
-from optuna.samplers import TPESampler
-from optuna.visualization import plot_optimization_history, plot_param_importances, plot_parallel_coordinate
-from stable_baselines3 import PPO
-from stable_baselines3.common.callbacks import StopTrainingOnNoModelImprovement
-from stable_baselines3.common.monitor import Monitor
+from pandas import read_csv
+import warnings
+warnings.filterwarnings("ignore")
 
-from utils.optuna.ppo import sample_ppo_params
-from utils.optuna.trial_eval_callback import TrialEvalCallback
-from utils.portfolio_trainer import PortfolioOptimization
-from sb3_contrib import RecurrentPPO
-from stable_baselines3 import A2C
-from stable_baselines3 import DDPG
-from stable_baselines3 import PPO
-from stable_baselines3 import SAC
-from stable_baselines3 import TD3
-import data_processor
 FLAGS = flags.FLAGS
 FLAGS(sys.argv)
+df_dow = read_csv('./data/dow.csv')
 
 
-study_path = "./studies/sp500_log+return"
+study_path = "./studies/dow-21"
 
 
 def objective(trial: optuna.Trial) -> float:
@@ -39,14 +43,15 @@ def objective(trial: optuna.Trial) -> float:
     # env_kwargs = {"step_mul": step_mul}
 
     sampled_hyperparams = sample_ppo_params(trial)
-
+    df = df_dow.copy()
+    df = df_dow[df_dow.tic.isin(['AAPL', 'AXP', 'DIS', 'GS', 'MMM', 'WBA'])]
     portfolio_optimizer = PortfolioOptimization(
-        transaction_fee=0.003, last_weight=False, vectorize=False)
-    train_data, test_data, eval_data = data_processor.get_data()
+        transaction_fee=0.003, env=PortfolioOptimizationEnvFlat, last_weight=False)
+    train_data, test_data, eval_data = data_processor.get_data(df)
     env_train = portfolio_optimizer.create_environment(
-        train_data, ["close", "log_return"], window=5)
+        train_data, ["close", "log_return", "volatility"], window=21)
     env_evaluation = portfolio_optimizer.create_environment(
-        test_data, ["close", "log_return"], window=5)
+        eval_data, ["close", "log_return", "volatility"], window=21)
 
     path = f"{study_path}/trial_{str(trial.number)}"
     os.makedirs(path, exist_ok=True)
@@ -61,7 +66,7 @@ def objective(trial: optuna.Trial) -> float:
         max_no_improvement_evals=30, min_evals=50, verbose=1)
     eval_callback = TrialEvalCallback(
         env_evaluation, trial, best_model_save_path=path, log_path=path,
-        n_eval_episodes=2, eval_freq=10000, deterministic=False, callback_after_eval=stop_callback
+        n_eval_episodes=1, eval_freq=1000, deterministic=False, callback_after_eval=stop_callback
     )
 
     params = sampled_hyperparams
@@ -105,7 +110,7 @@ if __name__ == "__main__":
     )
 
     try:
-        study.optimize(objective, n_jobs=-3, n_trials=128)
+        study.optimize(objective, n_jobs=-1, n_trials=128)
     except KeyboardInterrupt:
         pass
 

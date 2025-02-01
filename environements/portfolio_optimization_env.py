@@ -13,7 +13,8 @@ import numpy as np
 import pandas as pd
 from gymnasium import spaces
 from gymnasium.utils import seeding
-
+from utils.differential_sharpe_ratio import DifferentialSharpeRatio
+import utils.helpers as helpers
 matplotlib.use("Agg")
 
 try:
@@ -78,7 +79,7 @@ class PortfolioOptimizationEnv(gymnasium.Env):
         return_last_action=False,
         normalize_df=None,
         remove_close_from_state=True,
-        comission_fee_model="wvm",
+        comission_fee_model="trf",
         reward_scaling=1,
         comission_fee_pct=0,
         features=["close", "high", "low"],
@@ -86,6 +87,7 @@ class PortfolioOptimizationEnv(gymnasium.Env):
         time_column="date",
         time_format="%Y-%m-%d",
         tic_column="tic",
+        sr_decay_rate=0.03,
         sharpe_reward=False,
         tics_in_portfolio="all",
         time_window=1,
@@ -132,6 +134,7 @@ class PortfolioOptimizationEnv(gymnasium.Env):
         self._time_column = time_column
         self._time_format = time_format
         self._tic_column = tic_column
+        self.sr_decay_rate = sr_decay_rate
         self._df = df
         self._initial_amount = initial_amount
         self._return_last_action = return_last_action
@@ -151,7 +154,8 @@ class PortfolioOptimizationEnv(gymnasium.Env):
         self.count = 0
         self.remove_close_from_state = remove_close_from_state
         self.sharpe_reward = sharpe_reward
-
+        self.differential_sharpe_ratio_estimator = DifferentialSharpeRatio(
+            eta=self.sr_decay_rate)
         # initialize price variation
         self._df_price_variation = None
 
@@ -214,20 +218,6 @@ class PortfolioOptimizationEnv(gymnasium.Env):
 
         self._portfolio_value = self._initial_amount
         self._terminal = False
-
-    def get_sharpe_ratio(self, eta=0.01):
-        if len(self._portfolio_reward_memory) < 3:
-            return 0
-        log_returns = np.array(self._portfolio_reward_memory[-252:])
-        A = np.mean(log_returns[:-1])
-        B = np.mean(log_returns[:-1]**2)
-        delta_A = log_returns[-1] - A
-        delta_B = log_returns[-1]**2 - B
-        Dt = (B*delta_A - (0.5*A*delta_B)) / (B-A**2)**(3/2)
-        if math.isnan(Dt):
-            Dt = 0
-            print("Nan sharpe ratio",)
-        return Dt*eta
 
     def step(self, actions):
         """Performs a simulation step.
@@ -412,7 +402,8 @@ class PortfolioOptimizationEnv(gymnasium.Env):
             self._portfolio_reward_memory.append(portfolio_reward)
             # Define portfolio return
             if self.sharpe_reward:
-                sharpe_ratio = self.get_sharpe_ratio()
+                sharpe_ratio = self.differential_sharpe_ratio_estimator.update(
+                    portfolio_return)
                 self._portfolio_sharpe_memory.append(sharpe_ratio)
                 self._reward = sharpe_ratio
             else:

@@ -22,8 +22,10 @@ class PortfolioOptimization:
         remove_close=True,
         add_cash=True,
         env_num=4,
+        decay_rate=0.01,
         tag='',
-        vectorize=False
+        vectorize=False,
+        env=None
     ):
         self.transaction_fee = transaction_fee
         self.starting_capital = starting_capital
@@ -33,8 +35,10 @@ class PortfolioOptimization:
         self.remove_close = remove_close
         self.env_num = env_num
         self.sharp_reward = sharp_reward
+        self.decay_rate = decay_rate
         self.vectorize = vectorize
         self.tag = tag
+        self.env = env
         self.add_cash = add_cash
 
     def make_env(self, rank, data, args):
@@ -45,7 +49,7 @@ class PortfolioOptimization:
             return env
         return _f
 
-    def create_environment(self, data, features, window, seed=142):
+    def create_environment(self, data, features, window, seed=142, validate=None):
         env_kwargs = {
             "initial_amount": self.starting_capital,
             "features": features,
@@ -56,6 +60,8 @@ class PortfolioOptimization:
             "comission_fee_model": self.comission_fee_model,
             "return_last_action": self.last_weight,
             "add_cash": self.add_cash,
+            "sr_decay_rate": self.decay_rate,
+            "validate": validate,
             "remove_close_from_state": self.remove_close,
         }
         if self.vectorize:
@@ -78,7 +84,7 @@ class PortfolioOptimization:
             env = DummyVecEnv(env_fns)
             return env
         else:
-            environment = PortfolioOptimizationEnv(df=data, **env_kwargs)
+            environment = self.env(df=data, **env_kwargs)
             environment._seed(seed)
             return environment
 
@@ -98,7 +104,7 @@ class PortfolioOptimization:
         train_environment = self.create_environment(
             train_data, features, window=window_size)
         evaluation_environment = self.create_environment(
-            evaluation_data, features, window=window_size)
+            evaluation_data, features, window=window_size, validate=True)
         path_post_fix = "_".join(features) + "_window_size_"+str(window_size)+"_" + \
             str(self.transaction_fee) + "_"+self.tag + "/"
         agent = DRLAgent(env=train_environment)
