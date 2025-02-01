@@ -348,7 +348,7 @@ class PortfolioOptimizationEnvFlat(gymnasium.Env):
             # Define portfolio return
             if self.sharpe_reward:
                 sharpe_ratio = self.differential_sharpe_ratio_estimator.update(
-                    portfolio_reward)[0]
+                    portfolio_return)[0]
                 self._portfolio_sharpe_memory.append(sharpe_ratio)
                 self._reward = sharpe_ratio
             else:

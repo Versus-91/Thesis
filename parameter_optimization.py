@@ -32,7 +32,7 @@ FLAGS(sys.argv)
 df_dow = read_csv('./data/dow.csv')
 
 
-study_path = "./studies/dow-21"
+study_path = "./studies/s1"
 
 
 def objective(trial: optuna.Trial) -> float:
@@ -102,7 +102,6 @@ if __name__ == "__main__":
     pruner = MedianPruner(n_startup_trials=10, n_warmup_steps=10)
 
     study = optuna.create_study(
-        storage="sqlite:///db.sqlite3",
         sampler=sampler,
         pruner=pruner,
         load_if_exists=True,
