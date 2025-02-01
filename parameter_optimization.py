@@ -110,7 +110,7 @@ if __name__ == "__main__":
     )
 
     try:
-        study.optimize(objective, n_jobs=-1, n_trials=128)
+        study.optimize(objective, n_jobs=8, n_trials=128)
     except KeyboardInterrupt:
         pass
 
