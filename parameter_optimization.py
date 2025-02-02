@@ -32,7 +32,7 @@ FLAGS(sys.argv)
 df_dax = read_csv('./dataset/dax.csv')
 
 
-study_path = "./studies/s1"
+study_path = "./studies/s3"
 
 
 def objective(trial: optuna.Trial) -> float:
@@ -46,8 +46,8 @@ def objective(trial: optuna.Trial) -> float:
     df = df_dax.copy()
     df = df[df.tic.isin(['ADS.DE', 'ALV.DE', 'BAS.DE', 'BAYN.DE',
                         'BMW.DE', 'CON.DE', 'DBK.DE', 'DTE.DE', 'EOAN.DE'])]
-    portfolio_optimizer = PortfolioOptimization(
-        transaction_fee=0.003, env=PortfolioOptimizationEnvFlat, last_weight=False)
+    portfolio_optimizer = PortfolioOptimization(sharp_reward=True,
+                                                transaction_fee=0.003, env=PortfolioOptimizationEnvFlat, last_weight=False)
     train_data, test_data, eval_data = data_processor.get_data(df)
     env_train = portfolio_optimizer.create_environment(
         train_data, ["close", "log_return", "volatility"], window=21)
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     )
 
     try:
-        study.optimize(objective, n_jobs=8, n_trials=128)
+        study.optimize(objective, n_jobs=12, n_trials=128)
     except KeyboardInterrupt:
         pass
 
