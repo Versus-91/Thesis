@@ -1,3 +1,4 @@
+from functools import partial
 import data_processor
 from stable_baselines3 import TD3
 from stable_baselines3 import SAC
@@ -35,8 +36,9 @@ df_dax = read_csv('./dataset/dax.csv')
 study_path = "./studies/s3"
 
 
-def objective(trial: optuna.Trial) -> float:
-
+def objective(trial: optuna.Trial, sharpe_reward=False, commission=0, save_path="./studies/s3") -> float:
+    print(
+        f"sharpe reward: {sharpe_reward},commission:{commission}, path: {save_path}")
     time.sleep(random.random() * 16)
 
     # step_mul = trial.suggest_categorical("step_mul", [4, 8, 16, 32, 64])
@@ -46,15 +48,19 @@ def objective(trial: optuna.Trial) -> float:
     df = df_dax.copy()
     df = df[df.tic.isin(['ADS.DE', 'ALV.DE', 'BAS.DE', 'BAYN.DE',
                         'BMW.DE', 'CON.DE', 'DBK.DE', 'DTE.DE', 'EOAN.DE'])]
-    portfolio_optimizer = PortfolioOptimization(sharp_reward=True,
-                                                transaction_fee=0.003, env=PortfolioOptimizationEnvFlat, last_weight=False)
+    if sharpe_reward:
+        portfolio_optimizer = PortfolioOptimization(sharp_reward=True,
+                                                    transaction_fee=commission, env=PortfolioOptimizationEnvFlat, last_weight=False)
+    else:
+        portfolio_optimizer = PortfolioOptimization(sharp_reward=False,
+                                                    transaction_fee=0, env=PortfolioOptimizationEnvFlat, last_weight=False)
     train_data, test_data, eval_data = data_processor.get_data(df)
     env_train = portfolio_optimizer.create_environment(
         train_data, ["close", "log_return", "volatility"], window=21)
     env_evaluation = portfolio_optimizer.create_environment(
         eval_data, ["close", "log_return", "volatility"], window=21)
 
-    path = f"{study_path}/trial_{str(trial.number)}"
+    path = f"{save_path}/trial_{str(trial.number)}"
     os.makedirs(path, exist_ok=True)
 
     # env = MoveToBeaconEnv(**env_kwargs)
@@ -98,6 +104,16 @@ def objective(trial: optuna.Trial) -> float:
 
 
 if __name__ == "__main__":
+    from argparse import ArgumentParser
+
+    parser = ArgumentParser()
+    parser.add_argument("sharpe_reward")
+    parser.add_argument("commission")
+    parser.add_argument("save_path")
+
+    args = parser.parse_args()
+    if args.sharpe_reward:
+        print(args.sharpe_reward)
 
     sampler = TPESampler(n_startup_trials=10, multivariate=True)
     pruner = MedianPruner(n_startup_trials=10, n_warmup_steps=10)
@@ -108,7 +124,8 @@ if __name__ == "__main__":
         load_if_exists=True,
         direction="maximize",
     )
-
+    objective = partial(objective, sharpe_reward=args.sharpe_reward,
+                        commission=args.commission, save_path=args.save_path)
     try:
         study.optimize(objective, n_jobs=12, n_trials=128)
     except KeyboardInterrupt:
