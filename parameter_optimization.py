@@ -32,22 +32,22 @@ FLAGS = flags.FLAGS
 FLAGS(sys.argv)
 df_dax = read_csv('./dataset/dax.csv')
 
+df_dow = read_csv('./data/dow.csv')
 
 study_path = "./studies/s3"
 
 
-def objective(trial: optuna.Trial, sharpe_reward=False, commission=0, save_path="./studies/s3") -> float:
+def objective(trial: optuna.Trial, sharpe_reward=False, commission=0, window_size=5, save_path="./studies/s3") -> float:
     print(
-        f"sharpe reward: {sharpe_reward},commission:{commission}, path: {save_path}")
+        f"sharpe reward: {sharpe_reward},commission:{commission}, window: {window_size}, path: {save_path}")
     time.sleep(random.random() * 16)
 
     # step_mul = trial.suggest_categorical("step_mul", [4, 8, 16, 32, 64])
     # env_kwargs = {"step_mul": step_mul}
 
-    sampled_hyperparams = sample_ppo_params(trial)
-    df = df_dax.copy()
-    df = df[df.tic.isin(['ADS.DE', 'ALV.DE', 'BAS.DE', 'BAYN.DE',
-                        'BMW.DE', 'CON.DE', 'DBK.DE', 'DTE.DE', 'EOAN.DE'])]
+    sampled_hyperparams, lr = sample_ppo_params(trial)
+    df = df_dow.copy()
+    df = df_dow[df_dow.tic.isin(['AAPL', 'AXP', 'DIS', 'GS', 'MMM', 'WBA'])]
     if sharpe_reward:
         portfolio_optimizer = PortfolioOptimization(sharp_reward=True,
                                                     transaction_fee=commission, env=PortfolioOptimizationEnvFlat, last_weight=False)
@@ -56,9 +56,9 @@ def objective(trial: optuna.Trial, sharpe_reward=False, commission=0, save_path=
                                                     transaction_fee=0, env=PortfolioOptimizationEnvFlat, last_weight=False)
     train_data, test_data, eval_data = data_processor.get_data(df)
     env_train = portfolio_optimizer.create_environment(
-        train_data, ["close", "log_return", "volatility"], window=21)
+        train_data, ["close", "log_return"], window=window_size)
     env_evaluation = portfolio_optimizer.create_environment(
-        eval_data, ["close", "log_return", "volatility"], window=21)
+        eval_data, ["close", "log_return"], window=window_size)
 
     path = f"{save_path}/trial_{str(trial.number)}"
     os.makedirs(path, exist_ok=True)
@@ -70,18 +70,18 @@ def objective(trial: optuna.Trial, sharpe_reward=False, commission=0, save_path=
                 tensorboard_log=path, **sampled_hyperparams)
 
     stop_callback = StopTrainingOnNoModelImprovement(
-        max_no_improvement_evals=30, min_evals=50, verbose=1)
+        max_no_improvement_evals=10, min_evals=30, verbose=1)
     eval_callback = TrialEvalCallback(
         env_evaluation, trial, best_model_save_path=path, log_path=path,
-        n_eval_episodes=1, eval_freq=1000, deterministic=False, callback_after_eval=stop_callback
+        n_eval_episodes=5, eval_freq=1500, deterministic=True, callback_after_eval=stop_callback
     )
-
+    sampled_hyperparams['lr_log'] = lr
     params = sampled_hyperparams
     with open(f"{path}/params.txt", "w") as f:
         f.write(str(params))
 
     try:
-        model.learn(500_000, callback=eval_callback)
+        model.learn(200_000, callback=eval_callback)
         env_train.close()
     except (AssertionError, ValueError) as e:
         env_train.close()
@@ -109,6 +109,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("sharpe_reward")
     parser.add_argument("commission")
+    parser.add_argument("window_size")
     parser.add_argument("save_path")
 
     args = parser.parse_args()
@@ -125,9 +126,9 @@ if __name__ == "__main__":
         direction="maximize",
     )
     objective = partial(objective, sharpe_reward=args.sharpe_reward,
-                        commission=args.commission, save_path=args.save_path)
+                        commission=int(args.commission), window_size=int(args.window_size),  save_path=args.save_path)
     try:
-        study.optimize(objective, n_jobs=12, n_trials=128)
+        study.optimize(objective, n_jobs=4, n_trials=128)
     except KeyboardInterrupt:
         pass
 

@@ -93,7 +93,7 @@ class PortfolioOptimizationEnvFlat(gymnasium.Env):
         tics_in_portfolio="all",
         time_window=1,
         cwd="./",
-        validate=None,
+        is_validation=None,
         add_cash=True,
         new_gym_api=True,
     ):
@@ -146,7 +146,7 @@ class PortfolioOptimizationEnvFlat(gymnasium.Env):
         self._features = features
         self._valuation_feature = valuation_feature
         self._cwd = Path(cwd)
-        self.validate = validate
+        self.validate = is_validation
         self._new_gym_api = new_gym_api
         # results file
         self._results_file = self._cwd / "results" / "rl"
@@ -191,8 +191,8 @@ class PortfolioOptimizationEnvFlat(gymnasium.Env):
         self.observation_space = spaces.Box(
             low=-np.inf,
             high=np.inf,
-            shape=(1, len(features)*len(self._tic_list) *
-                   self._time_window + (len(self._tic_list))),
+            shape=(len(
+                self._tic_list), self._time_window + 2),
         )
 
         self._reset_memory()
@@ -348,7 +348,7 @@ class PortfolioOptimizationEnvFlat(gymnasium.Env):
             # Define portfolio return
             if self.sharpe_reward:
                 sharpe_ratio = self.differential_sharpe_ratio_estimator.update(
-                    portfolio_return)[0]
+                    portfolio_reward)
                 self._portfolio_sharpe_memory.append(sharpe_ratio)
                 self._reward = sharpe_ratio
             else:
@@ -452,10 +452,17 @@ class PortfolioOptimizationEnvFlat(gymnasium.Env):
             tic_data = tic_data[..., np.newaxis]
             state = tic_data if state is None else np.append(
                 state, tic_data, axis=2)
+
         state = state.transpose((0, 2, 1))
-        state = np.concatenate((np.array(
-            self._final_weights[-1]), state.flatten()
-        ))
+        if len(self._final_weights) < 3:
+            weights = np.zeros_like(self._final_weights[-1])
+        else:
+            weights = np.abs(self._final_weights[-1] - self._final_weights[-2])
+        weights = weights[:, np.newaxis]
+        log_returns = state[0, :, :]
+        variances = state[1, :, -1]
+        variances = variances[:, np.newaxis]
+        state = np.concatenate((weights, variances, log_returns), axis=1)
         info = {
             "tics": self._tic_list,
             "start_time": start_time,

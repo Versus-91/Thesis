@@ -1,6 +1,7 @@
 """From FinRL https://github.com/AI4Finance-LLC/FinRL/tree/master/finrl/env"""
 
 from __future__ import annotations
+import datetime
 from pathlib import Path
 from stable_baselines3.common.vec_env import DummyVecEnv
 import matplotlib.pyplot as plt
@@ -87,7 +88,8 @@ class PortfolioOptimizationEnv(gymnasium.Env):
         time_column="date",
         time_format="%Y-%m-%d",
         tic_column="tic",
-        sr_decay_rate=0.03,
+        is_validation=False,
+        sr_decay_rate=0.003,
         sharpe_reward=False,
         tics_in_portfolio="all",
         time_window=1,
@@ -132,6 +134,7 @@ class PortfolioOptimizationEnv(gymnasium.Env):
         self._time_window = time_window
         self._time_index = time_window - 1
         self._time_column = time_column
+        self.is_validation = is_validation
         self._time_format = time_format
         self._tic_column = tic_column
         self.sr_decay_rate = sr_decay_rate
@@ -155,7 +158,7 @@ class PortfolioOptimizationEnv(gymnasium.Env):
         self.remove_close_from_state = remove_close_from_state
         self.sharpe_reward = sharpe_reward
         self.differential_sharpe_ratio_estimator = DifferentialSharpeRatio(
-            eta=self.sr_decay_rate)
+            decay_rate=self.sr_decay_rate)
         # initialize price variation
         self._df_price_variation = None
 
@@ -271,11 +274,16 @@ class PortfolioOptimizationEnv(gymnasium.Env):
             plt.savefig(self._results_file / "reward.png")
             plt.close()
 
-            plt.plot(self._actions_memory)
-            plt.title("Actions performed")
+            plt.plot(self._actions_memory[-250:])
+            plt.title("last years Actions performed")
             plt.xlabel("Time")
             plt.ylabel("Weight")
-            plt.savefig(self._results_file / "actions.png")
+            Cur_Date = datetime.datetime.now().strftime("%y-%m-%d-%H-%M")
+            if self.is_validation != True:
+                plt.savefig(self._results_file / "actions.png")
+            else:
+                plt.savefig(self._cwd / "results" / "rl" /
+                            "actions" / f"actions_{Cur_Date}.png")
             plt.close()
 
             print("=================================")

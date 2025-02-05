@@ -19,8 +19,9 @@ class PortfolioOptimization:
         normalize=None,
         last_weight=True,
         sharp_reward=False,
-        remove_close=True,
-        add_cash=True,
+        remove_close=False,
+        add_cash=False,
+        seed=42,
         env_num=4,
         decay_rate=0.01,
         tag='',
@@ -39,6 +40,7 @@ class PortfolioOptimization:
         self.vectorize = vectorize
         self.tag = tag
         self.env = env
+        self.seed = seed
         self.add_cash = add_cash
 
     def make_env(self, rank, data, args):
@@ -49,7 +51,7 @@ class PortfolioOptimization:
             return env
         return _f
 
-    def create_environment(self, data, features, window, seed=142, validate=None):
+    def create_environment(self, data, features, window, validate=None):
         env_kwargs = {
             "initial_amount": self.starting_capital,
             "features": features,
@@ -60,33 +62,14 @@ class PortfolioOptimization:
             "comission_fee_model": self.comission_fee_model,
             "return_last_action": self.last_weight,
             "add_cash": self.add_cash,
+            "is_validation": validate,
             "sr_decay_rate": self.decay_rate,
-            "validate": validate,
             "remove_close_from_state": self.remove_close,
         }
-        if self.vectorize:
-            start = datetime.strptime(data.iloc[0].date, "%Y-%m-%d")
-            end = datetime.strptime(
-                data.iloc[data.shape[0]-1].date, "%Y-%m-%d")
-            delta = end - start
-            segments_number = delta / self.env_num
-            segments = []
-            for i in range(self.env_num):
-                segment_start = start + (i * segments_number)
-                segment_end = start + ((i+1) * segments_number)
-                segments.append((segment_start, segment_end))
-            data_splits = []
-            for i in range(self.env_num):
-                data_splits.append(data_split(
-                    data, str(segments[i][0]), str(segments[i][1])))
-            env_fns = [self.make_env(i, data_splits[i], env_kwargs)
-                       for i in range(self.env_num)]
-            env = DummyVecEnv(env_fns)
-            return env
-        else:
-            environment = self.env(df=data, **env_kwargs)
-            environment._seed(seed)
-            return environment
+
+        environment = self.env(df=data, **env_kwargs)
+        environment._seed(self.seed)
+        return environment
 
     def train_model(
         self,
@@ -151,53 +134,30 @@ class PortfolioOptimization:
         #            'test': model_performance_test, 'model': model}
         return model
 
-    def load_from_file(self, model_name, path):
+    def load_from_file(self, model_name, environment, cwd, deterministic=True):
         if model_name not in MODELS:
             raise ValueError(
                 f"Model '{model_name}' not found in MODELS."
             )  # this is more informative than NotImplementedError("NotImplementedError")
         try:
             # load agent
-            model = MODELS[model_name].load(path)
-            print("Successfully load model", path)
+            model = MODELS[model_name].load(cwd)
+            print("Successfully load model", cwd)
         except BaseException as error:
             raise ValueError(
                 f"Failed to load agent. Error: {str(error)}") from error
 
-        return model
-
-    def DRL_prediction(self, model, test_data, features, deterministic=True, t=5):
-
-        test_environment = self.create_environment(
-            test_data, features, window=t)
-        """make a prediction and get results"""
-        test_env, test_obs = test_environment.get_sb_env()
-        account_memory = None  # This help avoid unnecessary list creation
-        actions_memory = None  # optimize memory consumption
-        # state_memory=[] #add memory pool to store states
-
-        test_env.reset()
-        max_steps = len(test_environment._df.index.unique()) - 1 - t
-
-        for i in range(len(test_environment._df.index.unique())):
-            action, _states = model.predict(
-                test_obs, deterministic=deterministic)
-            # account_memory = test_env.env_method(method_name="save_asset_memory")
-            # actions_memory = test_env.env_method(method_name="save_action_memory")
-            test_obs, rewards, dones, info = test_env.step(action)
-
-            if (
-                i == max_steps
-            ):  # more descriptive condition for early termination to clarify the logic
-                date_list = test_environment._date_memory
-                portfolio_return = test_environment._portfolio_return_memory
-                result_df = pd.DataFrame(
-                    {"date": date_list, "daily_return": portfolio_return,
-                        'account':  test_environment._asset_memory["final"], 'weights': test_environment._final_weights}
-                )
-                tiks = test_environment._tic_list.tolist()
-
-            if dones[0]:
-                print("hit end!")
-                break
+        # test on the testing env
+        state = environment.reset()[0]
+        done = False
+        tiks = environment._tic_list.tolist()
+        while not done:
+            action = model.predict(state, deterministic=deterministic)[0]
+            date_list = environment._date_memory
+            portfolio_return = environment._portfolio_return_memory
+            result_df = pd.DataFrame(
+                {"date": date_list, "daily_return": portfolio_return,
+                    'account':  environment._asset_memory["final"], 'weights': environment._final_weights}
+            )
+            state, reward, done, _,_ = environment.step(action)
         return result_df, tiks

@@ -1,3 +1,5 @@
+from environements.portfolio_optimization_env import PortfolioOptimizationEnv
+from environements.portfolio_optimization_env_flat import PortfolioOptimizationEnvFlat
 from utils.portfolio_trainer import PortfolioOptimization
 from pandas import read_csv
 from utils.feature_engineer import FeatureEngineer
@@ -75,7 +77,8 @@ if __name__ == '__main__':
     reduced_data.style.background_gradient(cmap='coolwarm')
 
     columns = reduced_data.columns.tolist()
-    cleaned_data = cleaned_data[cleaned_data.tic.isin(columns)]
+    cleaned_data = cleaned_data[cleaned_data.tic.isin(
+        ['AXP', 'DIS', 'GS', 'IBM', 'MMM', 'WBA'])]
 
     cleaned_data = add_volatility(cleaned_data)
     train_data = data_split(cleaned_data, TRAIN_START_DATE, TRAIN_END_DATE)
@@ -87,17 +90,21 @@ if __name__ == '__main__':
     print(f"Stock Dimension: {stock_dimension}")
 
     optimizer = PortfolioOptimization(
-        transaction_fee=0.003, vectorize=False,tag="wth_weith_state",comission_fee_model='trf')
-    # optimizer.train_model(train_data,
-    #                       validation_data,
-    #                       features=["close", "log_return"],
-    #                       policy_network="MultiInputLstmPolicy",
-    #                       model_name="RecurrentPPO",
-    #                       window_size=5,
-    #                       iterations=1000_000)
-    model = optimizer.load_from_file(
-        'ppo', path="data\RecurrentPPO_close_log_return_window_size_5_0.003_wth_weith_state\RecurrentPPO_500000_steps")
-    test_result = optimizer.DRL_prediction(
-        model, test_data, ["close", "log_return"])
-    from utils.plotting_helpers import plot_weights
-    plot_weights(test_result[0].weights, test_result[0].date, test_result[1])
+        transaction_fee=0, vectorize=False, sharp_reward=False, remove_close=True, decay_rate=0.0015,
+        last_weight=False, tag="lsmt_alternate_state", comission_fee_model=None, env=PortfolioOptimizationEnvFlat)
+    optimizer.train_model(train_data,
+                          validation_data,
+                          features=["close", "log_return", "volatility"],
+                          policy_network="MlpLstmPolicy",
+                          model_name="RecurrentPPO",
+                          args={'learning_rate': 1e-4,
+                                "gamma": 0.95, "gae_lambda": 0.9, 'batch_size': 64, 'ent_coef': 0.03},
+                          window_size=5,
+                          iterations=1000_000,
+                          )
+    # model = optimizer.load_from_file(
+    #     'ppo', path="data/RecurrentPPO_close_log_return_window_size_5_0.003_lsmt/RecurrentPPO_10000_steps",env=None)
+    # test_result = optimizer.DRL_prediction(
+    #     model, test_data, ["close", "log_return"])
+    # from utils.plotting_helpers import plot_weights
+    # plot_weights(test_result[0].weights, test_result[0].date, test_result[1])
