@@ -14,13 +14,8 @@ import numpy as np
 import scienceplots
 from utils.plotting_helpers import plot_mvo_weights
 import utils.mean_variance_optimization as mvo
-df_dow = read_csv('./data/dow.csv')
 # mpl.rcParams['figure.dpi'] = 300
 
-df_nasdaq = read_csv('./data/nasdaq.csv')
-df_hsi = read_csv('./data/hsi.csv')
-df_dax = read_csv('./data/dax.csv')
-df_sp500 = read_csv('./data/sp500.csv')
 warnings.filterwarnings("ignore")
 
 
