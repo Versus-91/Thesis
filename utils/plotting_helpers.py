@@ -48,45 +48,46 @@ def plot_mvo_weights(mvo_result, test_data, include_variance=True, figsize=(11, 
     unique_tics.append('date')
     w['date'] = mvo_result['date']
     w.columns = unique_tics
-    fig, ((ax_main, ax_legend), (ax_below, ax_empty)) = plt.subplots(
-        nrows=2, ncols=2,
-        gridspec_kw={'width_ratios': [10, 1], 'height_ratios': [3, 1]},
-        figsize=figsize,
-        dpi=dpi
-    )
+    with plt.style.context('science', 'ieee'):
+        fig, ((ax_main, ax_legend), (ax_below, ax_empty)) = plt.subplots(
+            nrows=2, ncols=2,
+            gridspec_kw={'width_ratios': [10, 1], 'height_ratios': [3, 1]},
+            figsize=figsize,
+            dpi=dpi
+        )
 
-    # Main plot
-    w.plot(
-        x='date', kind='area', stacked=True,
-        colormap="icefire", ax=ax_main, alpha=0.8
-    )
-    ax_main.set_xlim(w.date.min(), w.date.max())
-    ax_main.set_ylim(0, 1)
-    ax_main.set_ylabel('Weights')
+        # Main plot
+        w.plot(
+            x='date', kind='area', stacked=True,
+            colormap="icefire", ax=ax_main, alpha=0.8
+        )
+        ax_main.set_xlim(w.date.min(), w.date.max())
+        ax_main.set_ylim(0, 1)
+        ax_main.set_ylabel('Weights')
 
-    # Legend
-    ax_legend.axis('off')
-    handles, labels = ax_main.get_legend_handles_labels()
-    ax_main.legend().remove()
-    ax_legend.legend(handles, labels, loc='center', ncol=1)
+        # Legend
+        ax_legend.axis('off')
+        handles, labels = ax_main.get_legend_handles_labels()
+        ax_main.legend().remove()
+        ax_legend.legend(handles, labels, loc='center', ncol=1)
 
-    # Variance plot (optional)
-    if include_variance:
-        ax_below.plot(w['date'], mvo_result['variance'],
-                      label='Portfolio Variance')
-        ax_below.set_xlim(w.date.min(), w.date.max())
-        ax_below.set_ylabel('Variance')
-        ax_below.tick_params(axis='x', rotation=30)
-    else:
-        fig.delaxes(ax_below)
+        # Variance plot (optional)
+        if include_variance:
+            ax_below.plot(w['date'], mvo_result['variance'],
+                        label='Portfolio Variance')
+            ax_below.set_xlim(w.date.min(), w.date.max())
+            ax_below.set_ylabel('Variance')
+            ax_below.tick_params(axis='x', rotation=30)
+        else:
+            fig.delaxes(ax_below)
 
-    # Remove empty subplot
-    fig.delaxes(ax_empty)
-    plt.tight_layout()
-    if save_path:
-        plt.savefig(save_path, dpi=500)
-    plt.show()
-    # Save or show
+        # Remove empty subplot
+        fig.delaxes(ax_empty)
+        plt.tight_layout()
+        if save_path:
+            plt.savefig(save_path, dpi=500)
+        plt.show()
+        # Save or show
 
 
 def plot_buy_and_hold_weights(env, test_data, ad_cash=True):

@@ -89,7 +89,7 @@ np.random.seed(seed)
 torch.manual_seed(seed)
 
 optimizer = PortfolioOptimization(seed=seed,
-                                  transaction_fee=0.01, comission_fee_model=None, remove_close=True, tag="ppo_5days_with_penalty_delta_weight", sharp_reward=False, last_weight=False, add_cash=False, env=PortfolioOptimizationEnvFlat)
+                                  transaction_fee=0.005, comission_fee_model=None, remove_close=True, tag="ppo_5days_with_penalty_delta_weight", sharp_reward=False, last_weight=False, add_cash=False, env=PortfolioOptimizationEnvFlat)
 optimizer.train_model(train_data,
                       validation_data,
                       features=["close", "log_return", "volatility"],
