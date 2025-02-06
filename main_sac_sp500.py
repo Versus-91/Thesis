@@ -30,7 +30,7 @@ def linear_schedule(initial_value):
     return scheduler
 
 
-df_sp500 = read_csv('./data/sp500.csv')
+df_sp500 = read_csv('./dataset/sp500.csv')
 df = df_sp500[df_sp500.tic.isin(
     ['PG', 'BA', 'NKE', 'JPM', 'MCD', 'TRV', 'UNH', 'SHW', 'VZ'])]
 TRAIN_START_DATE = '2015-01-01'
