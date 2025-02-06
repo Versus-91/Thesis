@@ -15,6 +15,7 @@ import scienceplots
 from utils.plotting_helpers import plot_mvo_weights
 import utils.mean_variance_optimization as mvo
 # mpl.rcParams['figure.dpi'] = 300
+plt.rcParams['text.usetex'] = False  # Disable LaTeX
 
 warnings.filterwarnings("ignore")
 
