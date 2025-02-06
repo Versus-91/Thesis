@@ -90,7 +90,7 @@ optimizer.train_model(train_data,
                       validation_data,
                       features=["close", "log_return", "volatility"],
                       model_name="sac",
-                      args={"n_steps":  256, "batch_size": 64, "buffer_size": 5000, 'learning_rate': linear_schedule(
-                          2e-4), 'gamma': 0.95, 'gae_lambda': 0.95},
+                      args={ "batch_size": 64, "buffer_size": 5000, 'learning_rate': linear_schedule(
+                          2e-4), 'gamma': 0.95},
                       window_size=21,
                       iterations=600_000)
