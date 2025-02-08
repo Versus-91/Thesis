@@ -11,13 +11,12 @@ from utils.helpers import data_split
 import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
+import torch.nn as nn
 import scienceplots
 from utils.plotting_helpers import plot_mvo_weights
 import utils.mean_variance_optimization as mvo
 df_dow = read_csv('./data/dow.csv')
 # mpl.rcParams['figure.dpi'] = 300
-
-df_nasdaq = read_csv('./data/nasdaq.csv')
 df_hsi = read_csv('./data/hsi.csv')
 df_dax = read_csv('./data/dax.csv')
 df_sp500 = read_csv('./data/sp500.csv')
@@ -32,7 +31,7 @@ def linear_schedule(initial_value):
 
 df = df_dow.copy()
 df = df_dow[df_dow.tic.isin(['AXP', 'DIS', 'GS', 'MMM', 'WBA'])]
-TRAIN_START_DATE = '2015-01-01'
+TRAIN_START_DATE = '2010-01-01'
 TRAIN_END_DATE = '2019-12-30'
 
 VALIDATION_START_DATE = '2020-01-01'
@@ -83,18 +82,24 @@ validation_data = data_split(
     cleaned_data, VALIDATION_START_DATE, VALIDATION_END_DATE)
 stock_dimension = len(train_data.tic.unique())
 state_space = 1 + 2*stock_dimension + len(INDICATORS)*stock_dimension
+cleaned_data['log_return'] = cleaned_data['log_return'] * 100
+cleaned_data['volatility'] = cleaned_data['volatility'] * 100
+
 print(f"Stock Dimension: {stock_dimension}")
 seed = 42
 np.random.seed(seed)
 torch.manual_seed(seed)
 
 optimizer = PortfolioOptimization(seed=seed,
-                                  transaction_fee=0.005, comission_fee_model=None, remove_close=True, tag="ppo_5days_with_penalty_delta_weight", sharp_reward=False, last_weight=False, add_cash=False, env=PortfolioOptimizationEnvFlat)
+                                  transaction_fee=0.0005, comission_fee_model=None, remove_close=True
+                                  , tag="ppo_5days_with_penalty_delta_weight", 
+                                  sharp_reward=False, last_weight=False, add_cash=False, env=PortfolioOptimizationEnvFlat)
 optimizer.train_model(train_data,
                       validation_data,
                       features=["close", "log_return", "volatility"],
                       model_name="ppo",
-                      args={"n_steps":  256, "batch_size": 64, 'learning_rate': linear_schedule(
-                          2e-4), 'gamma': 0.95, 'gae_lambda': 0.95},
-                      window_size=21,
+                      args={"n_steps":  1024, "batch_size": 128, 'learning_rate': linear_schedule(
+                          1e-4), 'gamma': 0.95, 'gae_lambda': 0.85},
+                      policy_kwargs=dict(activation_fn=nn.SiLU),
+                      window_size=5,
                       iterations=400_000)

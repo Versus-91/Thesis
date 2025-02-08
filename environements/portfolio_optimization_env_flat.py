@@ -192,7 +192,7 @@ class PortfolioOptimizationEnvFlat(gymnasium.Env):
             low=-np.inf,
             high=np.inf,
             shape=(len(
-                self._tic_list), self._time_window + 2),
+                self._tic_list), self._time_window + 1),
         )
 
         self._reset_memory()
@@ -252,7 +252,7 @@ class PortfolioOptimizationEnvFlat(gymnasium.Env):
             plt.savefig(self._results_file / "reward.png")
             plt.close()
 
-            plt.plot(self._actions_memory[1:])
+            plt.stackplot(range(1, len(self._actions_memory)), self._actions_memory[1:], colors=colormap(np.linspace(0, 1, self._actions_memory.shape[1])))
             plt.title("Actions performed")
             plt.xlabel("Time")
             plt.ylabel("Weight")
@@ -454,15 +454,15 @@ class PortfolioOptimizationEnvFlat(gymnasium.Env):
                 state, tic_data, axis=2)
 
         state = state.transpose((0, 2, 1))
-        if len(self._final_weights) < 3:
-            weights = np.zeros_like(self._final_weights[-1])
-        else:
-            weights = np.abs(self._final_weights[-1] - self._final_weights[-2])
-        weights = weights[:, np.newaxis]
+        # if len(self._final_weights) < 3:
+        #     weights = np.zeros_like(self._final_weights[-1])
+        # else:
+        #     weights = self._final_weights[-1] - self._final_weights[-2]
+        # weights = self._final_weights[-1][:, np.newaxis]
         log_returns = state[0, :, :]
         variances = state[1, :, -1]
         variances = variances[:, np.newaxis]
-        state = np.concatenate((weights, variances, log_returns), axis=1)
+        state = np.concatenate((variances, log_returns), axis=1)
         info = {
             "tics": self._tic_list,
             "start_time": start_time,
