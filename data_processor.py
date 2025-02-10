@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import math
 from utils.portfolio_trainer import PortfolioOptimization
 from pandas import read_csv
 from utils.feature_engineer import FeatureEngineer
@@ -52,6 +53,39 @@ def get_data(df, train_start='2014-01-01', train_end='2019-12-30', validation_st
     cleaned_data = add_volatility(cleaned_data)
     cleaned_data = cleaned_data.fillna(0)
     cleaned_data = cleaned_data.replace(np.inf, 0)
+    cleaned_data['std_return_60'] = cleaned_data.groupby('tic')['log_return'].ewm(span=60, ignore_na=False,
+                                                                              min_periods=1).std().reset_index(level=0, drop=True)
+    cleaned_data['ewma_std_price_63'] = cleaned_data.groupby('tic')['close'].ewm(span=63, ignore_na=False,
+                                                                                min_periods=1).std().reset_index(level=0, drop=True)
+
+    cleaned_data['macd_normalized'] = cleaned_data['macd'] / \
+        cleaned_data['ewma_std_price_63']
+    cleaned_data['macd_std'] = cleaned_data.groupby('tic')['macd_normalized'].ewm(span=252, ignore_na=False,
+                                                                                min_periods=1).std().reset_index(level=0, drop=True)
+
+    cleaned_data['macd_normal'] = cleaned_data['macd_normalized'] / \
+        cleaned_data['macd_std']
+    cleaned_data['rsi_normal'] = cleaned_data['rsi_30'] / 100
+    cleaned_data['price_lag_5'] = cleaned_data.groupby('tic')['log_return'].rolling(
+        window=5, min_periods=5).sum().reset_index(level=0, drop=True)
+    cleaned_data['price_lag_21'] = cleaned_data.groupby('tic')['log_return'].rolling(
+        window=21, min_periods=21).sum().reset_index(level=0, drop=True)
+    cleaned_data['price_lag_42'] = cleaned_data.groupby('tic')['log_return'].rolling(
+        window=42, min_periods=42).sum().reset_index(level=0, drop=True)
+    cleaned_data['price_lag_63'] = cleaned_data.groupby('tic')['log_return'].rolling(
+        window=63, min_periods=63).sum().reset_index(level=0, drop=True)
+    cleaned_data['price_lag_252'] = cleaned_data.groupby('tic')['log_return'].rolling(
+        window=252, min_periods=252).sum().reset_index(level=0, drop=True)
+
+    cleaned_data['momentum_return_21_normal'] = cleaned_data['price_lag_21'] / \
+        (cleaned_data['std_return_60'] * math.sqrt(252))
+    cleaned_data['momentum_return_42_normal'] = cleaned_data['price_lag_42'] / \
+        (cleaned_data['std_return_60'] * math.sqrt(252))
+    cleaned_data['momentum_return_63_normal'] = cleaned_data['price_lag_63'] / \
+        (cleaned_data['std_return_60'] * math.sqrt(252))
+    cleaned_data['momentum_return_252_normal'] = cleaned_data['price_lag_252'] / \
+        (cleaned_data['std_return_60'] * math.sqrt(252))
+        
     train_data = data_split(cleaned_data, train_start, train_end)
     test_data = data_split(cleaned_data, test_start, test_end)
     validation_data = data_split(

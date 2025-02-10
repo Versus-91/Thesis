@@ -62,11 +62,7 @@ class MarkowitzAgent:
         cov = data.iloc[0].cov_list
         mean_returns = data.iloc[0].returns
         ef = EfficientFrontier(mean_returns, cov, solver=self.solver)
-        weights_last = info.get("last_weight")
 
-        if self.transaction_cost != 0 and self.multi_objective:
-            ef.add_objective(objective_functions.transaction_cost,
-                             w_prev=weights_last, k=self.transaction_cost)
         if self.objective == 'min_variance':
             ef.min_volatility()
             weights = ef.clean_weights()
@@ -75,9 +71,10 @@ class MarkowitzAgent:
             # weights = cla.clean_weights()
 
         else:
-            cla = CLA(mean_returns, cov)
-            cla.max_sharpe()
-            weights = cla.clean_weights()
+            # cla = CLA(mean_returns, cov)
+            # cla.max_sharpe()
+            ef.max_sharpe()
+            weights = ef.clean_weights()
 
         list_weights = list(weights.values())
         # get action. if using risk free rate then integrate it into the action
@@ -86,7 +83,7 @@ class MarkowitzAgent:
         # action = np.maximum(action, 0)
         # action = action / np.sum(action)
         w = np.array(list_weights)
-        variance = np.dot(w.T, np.dot(cov , w))
+        variance = np.dot(w.T, np.dot(cov, w))
         return (action, variance)
 
     def prediction(self, environment):
@@ -103,7 +100,7 @@ class MarkowitzAgent:
         history["date"].append(day)
         history["total_assets"].append(total_asset)
         history["episode_return"].append(0)
-        
+
         # episode_total_assets.append(environment.initial_amount)
         done = False
         while not done:

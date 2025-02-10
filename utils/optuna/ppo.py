@@ -36,13 +36,12 @@ def sample_ppo_params(trial: optuna.Trial) -> Dict[str, Any]:
     :return:
     """
     batch_size = trial.suggest_categorical(
-        "batch_size", [64, 128, 256])
+        "batch_size", [8, 16, 32, 64, 128, 256, 512, 1024])
     n_steps = trial.suggest_categorical(
-        "n_steps", [256, 512])
+        "n_steps", [8, 16, 32, 64, 128, 256, 512, 1024])
     gamma = trial.suggest_categorical(
         "gamma", [0.5, 0.8, 0.9, 0.95, 0.98, 0.99, 0.995, 0.999, 0.9999])
-    suggested_learning_rate = trial.suggest_loguniform(
-        "learning_rate", 1e-5, 1e-3)
+    suggested_learning_rate = trial.suggest_loguniform("learning_rate", 1e-5, 1)
     lr_schedule = trial.suggest_categorical(
         'lr_schedule', ['linear', 'constant'])
     ent_coef = trial.suggest_loguniform("ent_coef", 0.00000001, 0.1)
@@ -56,7 +55,7 @@ def sample_ppo_params(trial: optuna.Trial) -> Dict[str, Any]:
 
     ortho_init = trial.suggest_categorical('ortho_init', [False, True])
     activation_fn = trial.suggest_categorical(
-        'activation_fn', ['tanh', 'relu', 'elu', 'leaky_relu'])
+        'activation_fn', ['tanh', 'relu', 'swish', 'leaky_relu'])
 
     # TODO: account when using multiple envs
     if batch_size > n_steps:
@@ -81,7 +80,7 @@ def sample_ppo_params(trial: optuna.Trial) -> Dict[str, Any]:
     #                  vf=[net_arch_width] * net_arch_depth)]
 
     activation_fn = {"tanh": nn.Tanh, "relu": nn.ReLU,
-                     "elu": nn.ELU, "leaky_relu": nn.LeakyReLU}[activation_fn]
+                     "swish": nn.SELU, "leaky_relu": nn.LeakyReLU}[activation_fn]
 
     return ({
         "n_steps": n_steps,

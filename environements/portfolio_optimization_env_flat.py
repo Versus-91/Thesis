@@ -251,19 +251,18 @@ class PortfolioOptimizationEnvFlat(gymnasium.Env):
             plt.ylabel("Reward")
             plt.savefig(self._results_file / "reward.png")
             plt.close()
-
-            plt.stackplot(range(1, len(self._actions_memory)), self._actions_memory[1:], colors=colormap(np.linspace(0, 1, self._actions_memory.shape[1])))
+            Cur_Date = datetime.datetime.now().strftime("%y-%m-%d-%H-%M")
+            plt.plot(self._actions_memory[1:])
             plt.title("Actions performed")
             plt.xlabel("Time")
             plt.ylabel("Weight")
-            Cur_Date = datetime.datetime.now().strftime("%y-%m-%d-%H-%M")
+            
             if self.validate != True:
                 plt.savefig(self._results_file / "actions.png")
             else:
                 plt.savefig(self._cwd / "results" / "rl" /
                             "actions" / f"actions_{Cur_Date}.png")
             plt.close()
-
             print("=================================")
             print("Initial portfolio value:{}".format(
                 self._asset_memory["final"][0]))
