@@ -8,7 +8,7 @@ from sb3_contrib import RecurrentPPO
 from environements.portfolio_optimization_env import PortfolioOptimizationEnv
 from utils.portfolio_trainer import PortfolioOptimization
 from utils.optuna.trial_eval_callback import TrialEvalCallback
-from utils.optuna.ppo import sample_ppo_params
+from utils.optuna.sac import sample_sac_params
 from environements.portfolio_optimization_env_flat import PortfolioOptimizationEnvFlat
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.callbacks import StopTrainingOnNoModelImprovement
@@ -46,7 +46,7 @@ def objective(trial: optuna.Trial, sharpe_reward=False, commission=0, window_siz
     # step_mul = trial.suggest_categorical("step_mul", [4, 8, 16, 32, 64])
     # env_kwargs = {"step_mul": step_mul}
 
-    sampled_hyperparams, lr = sample_ppo_params(trial)
+    sampled_hyperparams, lr = sample_sac_params(trial)
     df = df_dow.copy()
     df = df_dow[df_dow.tic.isin(
         ['MSFT', 'UNH', 'DIS', 'GS', 'HD', 'V', "AXP", "MCD", "CAT", "AMGN", "TRV"])]
@@ -78,7 +78,7 @@ def objective(trial: optuna.Trial, sharpe_reward=False, commission=0, window_siz
     # env = MoveToBeaconEnv(**env_kwargs)
     env_train = Monitor(env_train)
     env_evaluation = Monitor(env_evaluation)
-    model = PPO("MlpPolicy", env=env_train, seed=142, verbose=0, device='cpu',
+    model = SAC("MlpPolicy", env=env_train, seed=142, verbose=0, device='cpu',
                 tensorboard_log=path, **sampled_hyperparams)
 
     stop_callback = StopTrainingOnNoModelImprovement(
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     objective = partial(objective, sharpe_reward=args.sharpe_reward,
                         commission=int(args.commission), window_size=int(args.window_size),  save_path=args.save_path)
     try:
-        study.optimize(objective, n_jobs=6, n_trials=128)
+        study.optimize(objective, n_jobs=-1, n_trials=128)
     except KeyboardInterrupt:
         pass
 

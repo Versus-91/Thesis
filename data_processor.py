@@ -11,8 +11,6 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-
-
 def add_volatility(df, periods=21):
     rolling_volatility = df.groupby(
         'tic')['log_return'].rolling(window=periods).std()
@@ -38,8 +36,8 @@ def get_data(df, train_start='2014-01-01', train_end='2019-12-30', validation_st
         start_date_year_before = start_date.replace(
             month=2, day=28, year=start_date.year - 1)
     INDICATORS = [
-        "close_21_ema",
-        "close_62_ema"
+        "macd",
+        "rsi_30",
     ]
 
     fe = FeatureEngineer(use_technical_indicator=True,
@@ -54,14 +52,14 @@ def get_data(df, train_start='2014-01-01', train_end='2019-12-30', validation_st
     cleaned_data = cleaned_data.fillna(0)
     cleaned_data = cleaned_data.replace(np.inf, 0)
     cleaned_data['std_return_60'] = cleaned_data.groupby('tic')['log_return'].ewm(span=60, ignore_na=False,
-                                                                              min_periods=1).std().reset_index(level=0, drop=True)
+                                                                                  min_periods=1).std().reset_index(level=0, drop=True)
     cleaned_data['ewma_std_price_63'] = cleaned_data.groupby('tic')['close'].ewm(span=63, ignore_na=False,
-                                                                                min_periods=1).std().reset_index(level=0, drop=True)
+                                                                                 min_periods=1).std().reset_index(level=0, drop=True)
 
     cleaned_data['macd_normalized'] = cleaned_data['macd'] / \
         cleaned_data['ewma_std_price_63']
     cleaned_data['macd_std'] = cleaned_data.groupby('tic')['macd_normalized'].ewm(span=252, ignore_na=False,
-                                                                                min_periods=1).std().reset_index(level=0, drop=True)
+                                                                                  min_periods=1).std().reset_index(level=0, drop=True)
 
     cleaned_data['macd_normal'] = cleaned_data['macd_normalized'] / \
         cleaned_data['macd_std']
@@ -85,7 +83,7 @@ def get_data(df, train_start='2014-01-01', train_end='2019-12-30', validation_st
         (cleaned_data['std_return_60'] * math.sqrt(252))
     cleaned_data['momentum_return_252_normal'] = cleaned_data['price_lag_252'] / \
         (cleaned_data['std_return_60'] * math.sqrt(252))
-        
+
     train_data = data_split(cleaned_data, train_start, train_end)
     test_data = data_split(cleaned_data, test_start, test_end)
     validation_data = data_split(
