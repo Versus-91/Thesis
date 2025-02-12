@@ -256,7 +256,7 @@ class PortfolioOptimizationEnvFlat(gymnasium.Env):
             plt.title("Actions performed")
             plt.xlabel("Time")
             plt.ylabel("Weight")
-            
+
             if self.validate != True:
                 plt.savefig(self._results_file / "actions.png")
             else:
@@ -457,11 +457,11 @@ class PortfolioOptimizationEnvFlat(gymnasium.Env):
         #     weights = np.zeros_like(self._final_weights[-1])
         # else:
         #     weights = self._final_weights[-1] - self._final_weights[-2]
-        # weights = self._final_weights[-1][:, np.newaxis]
+        weights = self._final_weights[-1][:, np.newaxis]
         log_returns = state[0, :, :]
         variances = state[1, :, -1]
         variances = variances[:, np.newaxis]
-        state = np.concatenate((variances, log_returns), axis=1)
+        state = np.concatenate((weights, variances, log_returns), axis=1)
         info = {
             "tics": self._tic_list,
             "start_time": start_time,

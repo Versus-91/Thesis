@@ -335,49 +335,50 @@ class PortfolioOptimizationEnv(gymnasium.Env):
             self._state, self._info = self._get_state_and_info_from_time_index(
                 self._time_index
             )
-            negative_fee_penalty = 1
-            # if using weights vector modifier, we need to modify weights vector
-            if self._comission_fee_model == "wvm":
-                delta_weights = weights - last_weights
-                if self.add_cash:
-                    delta_assets = delta_weights[1:]  # disconsider
-                else:
-                    delta_assets = delta_weights  # disconsider
-                # calculate fees considering weights modification
-                fees = np.sum(
-                    np.abs(delta_assets * self._portfolio_value)) * self._comission_fee_pct
-                if self.add_cash:
-                    if fees > weights[0] * self._portfolio_value:
-                        print("Trade without enough cash.")
-                        weights = last_weights
-                        negative_fee_penalty = -1
-                        # maybe add negative reward
-                    else:
-                        portfolio = weights * self._portfolio_value
-                        portfolio[0] -= fees
-                        self._portfolio_value = np.sum(
-                            portfolio)  # new portfolio value
-                        weights = portfolio / self._portfolio_value  # new weights
-                else:
-                    portfolio = weights * self._portfolio_value
-                    self._portfolio_value = np.sum(
-                        portfolio)  # new portfolio value
-                    self._portfolio_value = self._portfolio_value - fees
-                    weights = portfolio / self._portfolio_value  # new weights
-            elif self._comission_fee_model == "trf":
-                last_mu = 1
-                mu = 1 - 2 * self._comission_fee_pct + self._comission_fee_pct**2
-                while abs(mu - last_mu) > 1e-10:
-                    last_mu = mu
-                    mu = (
-                        1
-                        - self._comission_fee_pct * weights[0]
-                        - (2 * self._comission_fee_pct -
-                           self._comission_fee_pct**2)
-                        * np.sum(np.maximum(last_weights[1:] - mu * weights[1:], 0))
-                    ) / (1 - self._comission_fee_pct * weights[0])
-                self._info["trf_mu"] = mu
-                self._portfolio_value = mu * self._portfolio_value
+            delta_weights = weights - last_weights
+            # negative_fee_penalty = 1
+            # # if using weights vector modifier, we need to modify weights vector
+            # if self._comission_fee_model == "wvm":
+            #     delta_weights = weights - last_weights
+            #     if self.add_cash:
+            #         delta_assets = delta_weights[1:]  # disconsider
+            #     else:
+            #         delta_assets = delta_weights  # disconsider
+            #     # calculate fees considering weights modification
+            #     fees = np.sum(
+            #         np.abs(delta_assets * self._portfolio_value)) * self._comission_fee_pct
+            #     if self.add_cash:
+            #         if fees > weights[0] * self._portfolio_value:
+            #             print("Trade without enough cash.")
+            #             weights = last_weights
+            #             negative_fee_penalty = -1
+            #             # maybe add negative reward
+            #         else:
+            #             portfolio = weights * self._portfolio_value
+            #             portfolio[0] -= fees
+            #             self._portfolio_value = np.sum(
+            #                 portfolio)  # new portfolio value
+            #             weights = portfolio / self._portfolio_value  # new weights
+            #     else:
+            #         portfolio = weights * self._portfolio_value
+            #         self._portfolio_value = np.sum(
+            #             portfolio)  # new portfolio value
+            #         self._portfolio_value = self._portfolio_value - fees
+            #         weights = portfolio / self._portfolio_value  # new weights
+            # elif self._comission_fee_model == "trf":
+            #     last_mu = 1
+            #     mu = 1 - 2 * self._comission_fee_pct + self._comission_fee_pct**2
+            #     while abs(mu - last_mu) > 1e-10:
+            #         last_mu = mu
+            #         mu = (
+            #             1
+            #             - self._comission_fee_pct * weights[0]
+            #             - (2 * self._comission_fee_pct -
+            #                self._comission_fee_pct**2)
+            #             * np.sum(np.maximum(last_weights[1:] - mu * weights[1:], 0))
+            #         ) / (1 - self._comission_fee_pct * weights[0])
+            #     self._info["trf_mu"] = mu
+            #     self._portfolio_value = mu * self._portfolio_value
 
             # save initial portfolio value of this time step
             self._asset_memory["initial"].append(self._portfolio_value)
@@ -417,7 +418,8 @@ class PortfolioOptimizationEnv(gymnasium.Env):
             else:
                 self._reward = portfolio_reward
 
-            self._reward = self._reward * self._reward_scaling
+            self._reward = self._reward - \
+                np.sum(self._comission_fee_pct * delta_weights)
 
         if self._new_gym_api:
             return self._state, self._reward, self._terminal, False, self._info
