@@ -41,30 +41,48 @@ def mvo_data(data, TEST_START_DATE, TEST_END_DATE, returns_model='ema_historical
     return test_df
 
 
-def mean_variance_optimization(data, solver='OSQP', window=1, rf=0.02, pct=0.001, objective='min_variance', multi_objective=False):
-    result = {}
-    stock_dimension = len(data.loc[0].returns)
-    state_space = stock_dimension
-    env_kwargs = {
-        "hmax": 100,
-        "initial_amount": 50_000,
-        "transaction_cost_pct": pct,
-        "state_space": state_space,
-        "stock_dim": stock_dimension,
-        "tech_indicator_list": [],
-        "action_space": stock_dimension,
-        "reward_scaling": 1e-4,
-        "window": window
+def mean_variance_optimization(test_data, solver='OSQP', window=1, commission_fee=0, objective='min_variance'):
+    z = test_data.copy()
+    z.sort_values(by=['date', 'tic'])
+    environment = PortfolioOptimizationEnv(
+        test_data,
+        initial_amount=1000000,
+        comission_fee_pct=commission_fee,
+        time_window=window,
+        features=["close", "return"],
+        normalize_df=None,
+        add_cash=False,
+        use_softmax=False
+    )
 
-    }
-    test_env = StockPortfolioEnv(df=data, **env_kwargs)
-    agent = MarkowitzAgent(test_env, rf=rf, objective=objective,
-                           cost=pct, multi_objective=multi_objective)
-    mvo_min_variance = agent.prediction(test_env)
-    result["name"] = 'Min Variance Portfolio'
-    result["action"] = test_env.actions_memory
-    result["date"] = test_env.date_memory
-    result["variance"] = test_env.variance_memory
-    result["test"] = mvo_min_variance
+    variances = []
+    environment.reset()
+    terminated = False
+    environment.reset()
+    weights_list = []
 
-    return result
+    for index in z.index.unique():
+        mean_returns = z.loc[index].iloc[0].returns
+        cov = z.loc[index].iloc[0].cov_list
+        ef = EfficientFrontier(mean_returns, cov, solver=solver)
+        if objective == 'min_variance':
+            ef.min_volatility()
+            weights = ef.clean_weights()
+
+        else:
+            ef.max_sharpe()
+            weights = ef.clean_weights()
+        weights = list(weights.values())
+        weights_list.append(weights)
+        w = np.array(weights)
+        _, _, terminated, _, _ = environment.step(weights)
+        variances.append(np.dot(w.T, np.dot(cov, w)))
+        if terminated:
+            break
+    date_list = environment._date_memory
+    portfolio_return = environment._portfolio_return_memory
+    result_df = pd.DataFrame(
+        {"date": date_list, "daily_return": portfolio_return,
+            'account':  environment._asset_memory["final"], 'weights': environment._final_weights}
+    )
+    return result_df, environment._tic_list.tolist(), variances, pd.DataFrame(weights_list)
