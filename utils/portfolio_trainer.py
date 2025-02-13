@@ -21,6 +21,7 @@ class PortfolioOptimization:
         sharp_reward=False,
         remove_close=False,
         add_cash=False,
+        clip_range=0.04,
         seed=42,
         env_num=4,
         decay_rate=0.01,
@@ -29,6 +30,7 @@ class PortfolioOptimization:
         env=None
     ):
         self.transaction_fee = transaction_fee
+        self.clip_range = clip_range
         self.starting_capital = starting_capital
         self.comission_fee_model = comission_fee_model
         self.normalize = normalize
@@ -57,6 +59,7 @@ class PortfolioOptimization:
             "features": features,
             "comission_fee_pct": self.transaction_fee,
             "time_window": window,
+            "clip_range": self.clip_range ,
             "sharpe_reward": self.sharp_reward,
             "normalize_df": self.normalize,
             "comission_fee_model": self.comission_fee_model,
@@ -159,5 +162,5 @@ class PortfolioOptimization:
                 {"date": date_list, "daily_return": portfolio_return,
                     'account':  environment._asset_memory["final"], 'weights': environment._final_weights}
             )
-            state, reward, done, _,_ = environment.step(action)
+            state, reward, done, _, _ = environment.step(action)
         return result_df, tiks

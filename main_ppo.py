@@ -31,8 +31,9 @@ def linear_schedule(initial_value):
 
 df = df_dow.copy()
 
-df = df_dow[df_dow.tic.isin(['AXP', 'DIS', 'GS', 'MMM', 'UNH', 'MCD'])]
-TRAIN_START_DATE = '2015-01-01'
+df = df_dow[df_dow.tic.isin(
+    ['AXP', 'DIS', 'GS', 'MMM', 'UNH', 'MCD', 'CAT', 'CRM', 'V', 'AMGN', 'TRV', 'MSFT'])]
+TRAIN_START_DATE = '2010-01-01'
 TRAIN_END_DATE = '2019-12-30'
 
 VALIDATION_START_DATE = '2020-01-01'
@@ -50,16 +51,15 @@ fe = FeatureEngineer(use_technical_indicator=True,
                      use_turbulence=False,
                      user_defined_feature=True)
 
-processed_prcies = fe.preprocess_data(df.query('date>"2005-01-01"'))
+processed_prcies = fe.preprocess_data(df.query('date>"2000-01-01"'))
 cleaned_data = processed_prcies.copy()
 cleaned_data = cleaned_data.fillna(0)
 cleaned_data = cleaned_data.replace(np.inf, 0)
 stock_dimension = len(cleaned_data.tic.unique())
 state_space = 1 + 2*stock_dimension + len(INDICATORS)*stock_dimension
 print(f"Stock Dimension: {stock_dimension}")
-
 # Compute exponentially weighted std of log returns
-for window in [21, 42, 63, 252]:
+for window in [21, 42, 63]:
     cleaned_data[f'std_return_{window}'] = cleaned_data.groupby('tic')['log_return'] \
         .ewm(span=window, min_periods=1, adjust=False).std().values
 # Compute exponentially weighted std of closing prices for MACD normalization
@@ -71,18 +71,17 @@ cleaned_data['macd_normal'] = cleaned_data['macd'] / \
     cleaned_data['ewma_std_price_63']
 
 # Rolling cumulative log returns over different periods
-for window in [5, 21, 42, 63, 252]:
+for window in [5, 21, 42, 63]:
     cleaned_data[f'price_lag_{window}'] = cleaned_data.groupby('tic')['log_return'] \
         .rolling(window=window, min_periods=1).sum().values
 
 # Normalize rolling log returns by their respective volatilities
-for window in [21, 42, 63, 252]:
+for window in [21, 42, 63]:
     cleaned_data[f'r_{window}'] = cleaned_data[f'price_lag_{window}'] / \
         cleaned_data[f'std_return_{window}']
 
 # Normalize RSI (if needed)
 cleaned_data['rsi'] = cleaned_data['rsi_30'] / 100
-
 cleaned_data = cleaned_data.fillna(0)
 cleaned_data = cleaned_data.replace(np.inf, 0)
 train_data = data_split(cleaned_data, TRAIN_START_DATE, TRAIN_END_DATE)
@@ -98,17 +97,21 @@ np.random.seed(seed)
 torch.manual_seed(seed)
 
 optimizer = PortfolioOptimization(
-    transaction_fee=0.003, comission_fee_model=None, vectorize=False, normalize=None,
-    tag="fixed_merge_ppo", sharp_reward=False, last_weight=False, remove_close=True,
+    transaction_fee=0.002, comission_fee_model=None, vectorize=False, normalize=None, clip_range=0.04,
+    tag="fixed_ppo", sharp_reward=False, last_weight=False, remove_close=True,
     add_cash=False, env=PortfolioOptimizationEnv
 )
 optimizer.train_model(train_data,
                       validation_data,
-                      features=["close", "log_return", "r_21", "r_42", "r_63", "r_252",
+                      features=["close", "log_return", "r_21", "r_42", "r_63",
                                 "macd", "rsi"
                                 ],
                       model_name="ppo",
-                      args={"n_steps":  256, "batch_size": 64, 'learning_rate': 1e-4,
-                            'gamma': 0.90, 'gae_lambda': 0.85, 'ent_coef': 0.05},
-                      window_size=60,
-                      iterations=400_000)
+                      args={"n_steps":  1024, "batch_size": 64, 'learning_rate': 1e-4,
+                            'gamma': 0.90, },
+                      window_size=5,
+                      policy_kwargs=dict(
+                          log_std_init=True,
+                          activation_fn=nn.SiLU,
+                      ),
+                      iterations=1000_000)
