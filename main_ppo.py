@@ -58,30 +58,31 @@ cleaned_data = cleaned_data.replace(np.inf, 0)
 stock_dimension = len(cleaned_data.tic.unique())
 state_space = 1 + 2*stock_dimension + len(INDICATORS)*stock_dimension
 print(f"Stock Dimension: {stock_dimension}")
+
+
 # Compute exponentially weighted std of log returns
 for window in [21, 42, 63]:
     cleaned_data[f'std_return_{window}'] = cleaned_data.groupby('tic')['log_return'] \
-        .ewm(span=window, min_periods=1, adjust=False).std().values
+        .transform(lambda x: x.ewm(span=window, min_periods=50,adjust=False).std())
 # Compute exponentially weighted std of closing prices for MACD normalization
 cleaned_data['ewma_std_price_63'] = cleaned_data.groupby('tic')['close'] \
-    .ewm(span=63, min_periods=1).std().values
+    .transform(lambda x: x.ewm(span=63, min_periods=50,adjust=False).std())
 
 # Normalize MACD by price volatility
-cleaned_data['macd_normal'] = cleaned_data['macd'] / \
-    cleaned_data['ewma_std_price_63']
+cleaned_data['macd_normal'] = cleaned_data['macd'] / cleaned_data['ewma_std_price_63']
 
 # Rolling cumulative log returns over different periods
 for window in [5, 21, 42, 63]:
     cleaned_data[f'price_lag_{window}'] = cleaned_data.groupby('tic')['log_return'] \
-        .rolling(window=window, min_periods=1).sum().values
+        .transform(lambda x: x.rolling(window=window, min_periods=1).sum())
 
 # Normalize rolling log returns by their respective volatilities
 for window in [21, 42, 63]:
-    cleaned_data[f'r_{window}'] = cleaned_data[f'price_lag_{window}'] / \
-        cleaned_data[f'std_return_{window}']
+    cleaned_data[f'r_{window}'] = cleaned_data[f'price_lag_{window}'] / cleaned_data[f'std_return_{window}']
 
 # Normalize RSI (if needed)
 cleaned_data['rsi'] = cleaned_data['rsi_30'] / 100
+
 cleaned_data = cleaned_data.fillna(0)
 cleaned_data = cleaned_data.replace(np.inf, 0)
 train_data = data_split(cleaned_data, TRAIN_START_DATE, TRAIN_END_DATE)

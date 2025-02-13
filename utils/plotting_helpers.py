@@ -9,7 +9,7 @@ matplotlib.use('Agg')
 
 def plot_weights(weights, dates, tics, add_cash=True):
     w = pd.DataFrame(weights.tolist())
-    columns = tics
+    columns = tics.copy()
     columns.append('date')
     w['date'] = dates
     if add_cash:

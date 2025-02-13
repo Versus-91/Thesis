@@ -5,8 +5,16 @@ from pypfopt import expected_returns
 import pandas as pd
 
 
-def mvo_data(data, INDICATORS, TEST_START_DATE, TEST_END_DATE):
-    final_result = []
+from utils.helpers import data_split
+from agents.evn_mvo import StockPortfolioEnv
+from agents.mvo_agent import MarkowitzAgent
+from pypfopt import EfficientFrontier, expected_returns, risk_models
+import pandas as pd
+from environements.portfolio_optimization_env import PortfolioOptimizationEnv
+import numpy as np
+
+
+def mvo_data(data, TEST_START_DATE, TEST_END_DATE, returns_model='ema_historical_return', risk_model='ledoit_wolf'):
     df = data.sort_values(['date', 'tic'], ignore_index=True).copy()
     df.index = df.date.factorize()[0]
     cov_list = []
@@ -17,9 +25,9 @@ def mvo_data(data, INDICATORS, TEST_START_DATE, TEST_END_DATE):
         data_lookback = df.loc[i-lookback:i, :]
         price_lookback = data_lookback.pivot_table(
             index='date', columns='tic', values='close')
-        return_lookback = price_lookback.pct_change().dropna()
-        covs = return_lookback.cov().values
-        mu.append(expected_returns.mean_historical_return(price_lookback))
+        covs = risk_models.risk_matrix(price_lookback, method=risk_model)
+        mu.append(expected_returns.return_model(
+            price_lookback, method=returns_model, compounding=False))
         cov_list.append(covs)
     df_cov = pd.DataFrame(
         {'time': df.date.unique()[lookback:], 'cov_list': cov_list, 'returns': mu})

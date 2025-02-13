@@ -97,6 +97,7 @@ class PortfolioOptimizationEnv(gymnasium.Env):
         clip_range=0.04,
         add_cash=True,
         new_gym_api=True,
+        use_softmax=True
     ):
         """Initializes environment's instance.
 
@@ -141,6 +142,7 @@ class PortfolioOptimizationEnv(gymnasium.Env):
         self._tic_column = tic_column
         self.sr_decay_rate = sr_decay_rate
         self._df = df
+        self.use_softmax = use_softmax
         self._initial_amount = initial_amount
         self._return_last_action = return_last_action
         self._reward_scaling = reward_scaling
@@ -321,11 +323,13 @@ class PortfolioOptimizationEnv(gymnasium.Env):
             actions = np.array(actions, dtype=np.float32)
 
             # if necessary, normalize weights
-            if math.isclose(np.sum(actions), 1, abs_tol=1e-6) and np.min(actions) >= 0:
-                weights = actions
+            if self.use_softmax:
+                if math.isclose(np.sum(actions), 1, abs_tol=1e-6) and np.min(actions) >= 0:
+                    weights = actions
+                else:
+                    weights = self._softmax_normalization(actions)
             else:
-                weights = self._softmax_normalization(actions)
-
+                weights = actions
             # save initial portfolio weights for this time step
             self._actions_memory.append(weights)
 
@@ -368,18 +372,14 @@ class PortfolioOptimizationEnv(gymnasium.Env):
             #         self._portfolio_value = self._portfolio_value - fees
             #         weights = portfolio / self._portfolio_value  # new weights
             if self._comission_fee_pct != 0:
-                last_mu = 1
-                mu = 1 - 2 * self._comission_fee_pct + self._comission_fee_pct**2
-                while abs(mu - last_mu) > 1e-10:
-                    last_mu = mu
-                    # Calculate the total transaction cost for all assets
-                    transaction_cost = (2 * self._comission_fee_pct - self._comission_fee_pct **
-                                        2) * np.sum(np.abs(last_weights - mu * weights))
-                    # Update mu
-                    mu = (1 - transaction_cost)
-                self._info["trf_mu"] = mu
-                self._portfolio_value = mu * self._portfolio_value
+                delta_weights = np.abs(weights - last_weights)
 
+                # Compute total transaction cost
+                transaction_cost = np.sum(
+                    delta_weights * self._comission_fee_pct) * self._portfolio_value
+
+                # Adjust portfolio value
+                self._portfolio_value = self._portfolio_value - transaction_cost
             # save initial portfolio value of this time step
             self._asset_memory["initial"].append(self._portfolio_value)
 
