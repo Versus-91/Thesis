@@ -21,6 +21,7 @@ class PortfolioOptimization:
         sharp_reward=False,
         remove_close=False,
         add_cash=False,
+        flatten_state=False,
         clip_range=0.04,
         seed=42,
         env_num=4,
@@ -31,6 +32,7 @@ class PortfolioOptimization:
     ):
         self.transaction_fee = transaction_fee
         self.clip_range = clip_range
+        self.flatten_state = flatten_state
         self.starting_capital = starting_capital
         self.comission_fee_model = comission_fee_model
         self.normalize = normalize
@@ -59,7 +61,8 @@ class PortfolioOptimization:
             "features": features,
             "comission_fee_pct": self.transaction_fee,
             "time_window": window,
-            "clip_range": self.clip_range ,
+            "flatten_state": self.flatten_state,
+            "clip_range": self.clip_range,
             "sharpe_reward": self.sharp_reward,
             "normalize_df": self.normalize,
             "comission_fee_model": self.comission_fee_model,

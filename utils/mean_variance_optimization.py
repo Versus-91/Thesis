@@ -14,10 +14,11 @@ from environements.portfolio_optimization_env import PortfolioOptimizationEnv
 import numpy as np
 
 
-def mvo_data(data, TEST_START_DATE, TEST_END_DATE, returns_model='ema_historical_return', risk_model='ledoit_wolf'):
+def mvo_data(data, returns_model='ema_historical_return', risk_model='sample_cov'):
     df = data.sort_values(['date', 'tic'], ignore_index=True).copy()
     df.index = df.date.factorize()[0]
     cov_list = []
+    corr_list = []
     mu = []
     # look back is one year
     lookback = 252
@@ -29,16 +30,13 @@ def mvo_data(data, TEST_START_DATE, TEST_END_DATE, returns_model='ema_historical
         mu.append(expected_returns.return_model(
             price_lookback, method=returns_model, compounding=False))
         cov_list.append(covs)
+        corr_list.append(price_lookback.pct_change().dropna().corr())
+
     df_cov = pd.DataFrame(
-        {'time': df.date.unique()[lookback:], 'cov_list': cov_list, 'returns': mu})
+        {'time': df.date.unique()[lookback:], 'cov_list': cov_list, 'corr_list': corr_list, 'returns': mu})
     df = df.merge(df_cov, left_on='date', right_on='time')
 
-    test_df = data_split(
-        df,
-        start=TEST_START_DATE,
-        end=TEST_END_DATE
-    )
-    return test_df
+    return df
 
 
 def mean_variance_optimization(test_data, solver='OSQP', window=1, commission_fee=0, objective='min_variance'):

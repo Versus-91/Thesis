@@ -97,7 +97,8 @@ class PortfolioOptimizationEnv(gymnasium.Env):
         clip_range=0.04,
         add_cash=True,
         new_gym_api=True,
-        use_softmax=True
+        use_softmax=True,
+        flatten_state=False
     ):
         """Initializes environment's instance.
 
@@ -142,6 +143,7 @@ class PortfolioOptimizationEnv(gymnasium.Env):
         self._tic_column = tic_column
         self.sr_decay_rate = sr_decay_rate
         self._df = df
+        self.flatten_state = flatten_state
         self.use_softmax = use_softmax
         self._initial_amount = initial_amount
         self._return_last_action = return_last_action
@@ -214,13 +216,21 @@ class PortfolioOptimizationEnv(gymnasium.Env):
         else:
             # if information about last action is not relevant,
             # a 3D observation space is defined
-            self.observation_space = spaces.Box(
-                low=-np.inf,
-                high=np.inf,
-                shape=(len(features), len(
-                    self._tic_list), self._time_window),
-            )
-
+            if self.flatten_state == False:
+                self.observation_space = spaces.Box(
+                    low=-np.inf,
+                    high=np.inf,
+                    shape=(len(features), len(
+                        self._tic_list), self._time_window),
+                )
+            else:
+                features_length = len(features)-1
+                tics_length = len(self._tic_list)
+                self.observation_space = spaces.Box(
+                    low=-np.inf,
+                    high=np.inf,
+                    shape=(1, (features_length*tics_length * self._time_window + (tics_length*tics_length)+tics_length)
+                           ))
         self._reset_memory()
 
         self._portfolio_value = self._initial_amount
@@ -504,9 +514,9 @@ class PortfolioOptimizationEnv(gymnasium.Env):
             self._price_variation = np.insert(self._price_variation, 0, 1)
 
         # define state to be returned
-        if self.remove_close_from_state:
+        if self.flatten_state:
             features = [x for x in self._features if x.strip().lower()
-                        != "close"]
+                        != "close" and x.strip().lower() != 'corr_list']
         else:
             features = self._features
 
@@ -518,6 +528,13 @@ class PortfolioOptimizationEnv(gymnasium.Env):
             state = tic_data if state is None else np.append(
                 state, tic_data, axis=2)
         state = state.transpose((0, 2, 1))
+        if self.flatten_state:
+            last_obs = self._data.iloc[-1]
+            corrs = last_obs.corr_list.values.flatten()
+            state_flattened = state.ravel()
+            state = np.concatenate(
+                (self._final_weights[-1], state_flattened, corrs))
+
         info = {
             "tics": self._tic_list,
             "start_time": start_time,
@@ -591,9 +608,11 @@ class PortfolioOptimizationEnv(gymnasium.Env):
             self._df_price_variation[self._time_column]
         )
         # transform numeric variables to float32 (compatibility with pytorch)
-        self._df[self._features] = self._df[self._features].astype("float32")
-        self._df_price_variation[self._features] = self._df_price_variation[
-            self._features
+        features = [x for x in self._features if x.strip().lower()
+                    != 'corr_list']
+        self._df[features] = self._df[features].astype("float32")
+        self._df_price_variation[features] = self._df_price_variation[
+            features
         ].astype("float32")
 
     def _reset_memory(self):
