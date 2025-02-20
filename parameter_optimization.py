@@ -63,10 +63,6 @@ def objective(trial: optuna.Trial, sharpe_reward=False, commission=0, window_siz
                                                     add_cash=False, env=PortfolioOptimizationEnv)
 
     train_data, test_data, eval_data = data_processor.get_data(df)
-    train_data.head()
-    train_data.tail()
-    eval_data.head()
-    eval_data.tail()
     env_train = portfolio_optimizer.create_environment(
         train_data, ["close", "log_return", "r_21", "r_42", "r_63",
                      "macd_normal", "rsi_30"
@@ -86,7 +82,7 @@ def objective(trial: optuna.Trial, sharpe_reward=False, commission=0, window_siz
                 tensorboard_log=path, **sampled_hyperparams)
 
     stop_callback = StopTrainingOnNoModelImprovement(
-        max_no_improvement_evals=10, min_evals=30, verbose=1)
+        max_no_improvement_evals=20, min_evals=30, verbose=1)
     eval_callback = TrialEvalCallback(
         env_evaluation, trial, best_model_save_path=path, log_path=path,
         n_eval_episodes=5, eval_freq=1500, deterministic=True, callback_after_eval=stop_callback
