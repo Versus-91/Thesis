@@ -151,7 +151,7 @@ if __name__ == "__main__":
     objective = partial(objective, sharpe_reward=use_sharpe_reward,
                         commission=commission_fee, window_size=windows_size,  save_path=save_path)
     try:
-        study.optimize(objective, n_jobs=6, n_trials=128)
+        study.optimize(objective, n_jobs=40, n_trials=128)
     except KeyboardInterrupt:
         pass
 
