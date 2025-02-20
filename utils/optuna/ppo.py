@@ -41,7 +41,8 @@ def sample_ppo_params(trial: optuna.Trial) -> Dict[str, Any]:
         "n_steps", [64, 128, 256, 512, 1024])
     gamma = trial.suggest_categorical(
         "gamma", [0.5, 0.8, 0.9, 0.95, 0.98, 0.99, 0.995, 0.999, 0.9999])
-    suggested_learning_rate = trial.suggest_loguniform("learning_rate", 1e-5, 1)
+    suggested_learning_rate = trial.suggest_loguniform(
+        "learning_rate", 1e-5, 1e-2)
     lr_schedule = trial.suggest_categorical(
         'lr_schedule', ['linear', 'constant'])
     ent_coef = trial.suggest_loguniform("ent_coef", 0.00000001, 0.1)

@@ -514,11 +514,9 @@ class PortfolioOptimizationEnv(gymnasium.Env):
             self._price_variation = np.insert(self._price_variation, 0, 1)
 
         # define state to be returned
-        if self.flatten_state:
+        if self.remove_close_from_state:
             features = [x for x in self._features if x.strip().lower()
                         != "close" and x.strip().lower() != 'corr_list']
-        else:
-            features = self._features
 
         state = None
         for tic in self._tic_list:

@@ -50,7 +50,7 @@ def objective(trial: optuna.Trial, sharpe_reward=False, commission=0, window_siz
     df = df_dow.copy()
     df = df_dow[df_dow.tic.isin(
         ['MSFT', 'UNH', 'DIS', 'GS', 'HD', 'V', "AXP", "MCD", "CAT", "AMGN", "TRV"])]
-
+    df.head()
     if sharpe_reward:
         portfolio_optimizer = PortfolioOptimization(flatten_state=False,
                                                     transaction_fee=0.001, comission_fee_model=None, vectorize=False, normalize=None,
@@ -63,6 +63,10 @@ def objective(trial: optuna.Trial, sharpe_reward=False, commission=0, window_siz
                                                     add_cash=False, env=PortfolioOptimizationEnv)
 
     train_data, test_data, eval_data = data_processor.get_data(df)
+    train_data.head()
+    train_data.tail()
+    eval_data.head()
+    eval_data.tail()
     env_train = portfolio_optimizer.create_environment(
         train_data, ["close", "log_return", "r_21", "r_42", "r_63",
                      "macd_normal", "rsi_30"
@@ -117,16 +121,27 @@ def objective(trial: optuna.Trial, sharpe_reward=False, commission=0, window_siz
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
+    try:
+        parser = ArgumentParser()
+        parser.add_argument("sharpe_reward")
+        parser.add_argument("commission")
+        parser.add_argument("window_size")
+        parser.add_argument("save_path")
+        args = parser.parse_args()
+        save_path = args.save_path
+        use_sharpe_reward = args.sharpe_reward
+        commission_fee = float(args.commission)
+        windows_size = int(args.window_size)
 
-    parser = ArgumentParser()
-    parser.add_argument("sharpe_reward")
-    parser.add_argument("commission")
-    parser.add_argument("window_size")
-    parser.add_argument("save_path")
+        if args.sharpe_reward:
+            print(args.sharpe_reward)
 
-    args = parser.parse_args()
-    if args.sharpe_reward:
-        print(args.sharpe_reward)
+    except:
+        save_path = './studies/s1'
+        use_sharpe_reward = False
+        commission_fee = 0.001
+        windows_size = 21
+        print('An exception occurred')
 
     sampler = TPESampler(n_startup_trials=10, multivariate=True)
     pruner = MedianPruner(n_startup_trials=10, n_warmup_steps=10)
@@ -137,8 +152,8 @@ if __name__ == "__main__":
         load_if_exists=True,
         direction="maximize",
     )
-    objective = partial(objective, sharpe_reward=args.sharpe_reward,
-                        commission=int(args.commission), window_size=int(args.window_size),  save_path=args.save_path)
+    objective = partial(objective, sharpe_reward=use_sharpe_reward,
+                        commission=commission_fee, window_size=windows_size,  save_path=save_path)
     try:
         study.optimize(objective, n_jobs=6, n_trials=128)
     except KeyboardInterrupt:

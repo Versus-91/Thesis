@@ -1,1 +1,0 @@
-{'n_steps': 1024, 'batch_size': 128, 'gamma': 0.995, 'learning_rate': 0.0005344210723381488, 'ent_coef': 1.970178511136564e-06, 'clip_range': 0.3, 'n_epochs': 5, 'gae_lambda': 0.99, 'vf_coef': 0.18764599958236927, 'policy_kwargs': {'net_arch': [{'pi': [128, 128], 'vf': [128, 128]}], 'activation_fn': <class 'torch.nn.modules.activation.Tanh'>, 'ortho_init': False}}

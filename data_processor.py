@@ -23,10 +23,6 @@ def add_volatility(df, periods=21):
 
 def get_data(df, train_start='2014-01-01', train_end='2019-12-30', validation_start='2020-01-01', validation_end='2020-12-30', test_start='2021-01-01', test_end='2024-10-01'):
 
-
-
-    # df = df_dax[df_dax.tic.isin([ 'AXP', 'DIS', 'GS', 'MMM', 'UNH','MCD','CAT','CRM','V','AMGN','TRV','MSFT'])]
-    df = df[df.tic.isin(['ADS.DE', 'ALV.DE', 'BAS.DE', 'BAYN.DE', 'BMW.DE', 'CON.DE', 'DBK.DE', 'DTE.DE', 'EOAN.DE', 'FME.DE', 'VOW3.DE'])]
     TRAIN_START_DATE = '2010-01-01'
     TRAIN_END_DATE = '2019-12-30'
 
@@ -41,16 +37,15 @@ def get_data(df, train_start='2014-01-01', train_end='2019-12-30', validation_st
     ]
 
     fe = FeatureEngineer(use_technical_indicator=True,
-                        tech_indicator_list=INDICATORS,
-                        use_turbulence=False,
-                        user_defined_feature=True)
+                         tech_indicator_list=INDICATORS,
+                         use_turbulence=False,
+                         user_defined_feature=True)
 
     processed_prcies = fe.preprocess_data(df.query('date>"2000-01-01"'))
     cleaned_data = processed_prcies.copy()
     cleaned_data = cleaned_data.fillna(0)
     cleaned_data = cleaned_data.replace(np.inf, 0)
-    stock_dimension = len(cleaned_data.tic.unique())
-    state_space = 1 + 2*stock_dimension + len(INDICATORS)*stock_dimension
+
     # Compute exponentially weighted std of log returns
     for window in [21, 42, 63]:
         cleaned_data[f'std_return_{window}'] = cleaned_data.groupby('tic')['log_return'] \
@@ -86,6 +81,5 @@ def get_data(df, train_start='2014-01-01', train_end='2019-12-30', validation_st
     test_data = data_split(cleaned_data, TEST_START_DATE, TEST_END_DATE)
     validation_data = data_split(
         cleaned_data, VALIDATION_START_DATE, VALIDATION_END_DATE)
-    stock_dimension = len(train_data.tic.unique())
 
     return train_data, test_data, validation_data

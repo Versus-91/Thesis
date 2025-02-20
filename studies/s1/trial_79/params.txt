@@ -1,1 +1,0 @@
-{'n_steps': 512, 'batch_size': 128, 'gamma': 0.5, 'learning_rate': 0.00028491347088434007, 'ent_coef': 0.00014901288768742497, 'clip_range': 0.1, 'n_epochs': 20, 'gae_lambda': 0.9, 'vf_coef': 0.6814510626778374, 'policy_kwargs': {'net_arch': [{'pi': [64, 64], 'vf': [64, 64]}], 'activation_fn': <class 'torch.nn.modules.activation.LeakyReLU'>, 'ortho_init': False}}
