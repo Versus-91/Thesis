@@ -23,71 +23,69 @@ def add_volatility(df, periods=21):
 
 def get_data(df, train_start='2014-01-01', train_end='2019-12-30', validation_start='2020-01-01', validation_end='2020-12-30', test_start='2021-01-01', test_end='2024-10-01'):
 
-    date_format = '%Y-%m-%d'
 
-    # Convert the string to a datetime object
-    start_date = datetime.strptime(train_start, date_format)
 
-    # Subtract one year
-    # Use timedelta(days=365) for a rough estimate, or handle leap years properly
-    try:
-        start_date_year_before = start_date.replace(year=start_date.year - 1)
-    except ValueError:  # Handles February 29 cases
-        start_date_year_before = start_date.replace(
-            month=2, day=28, year=start_date.year - 1)
+    # df = df_dax[df_dax.tic.isin([ 'AXP', 'DIS', 'GS', 'MMM', 'UNH','MCD','CAT','CRM','V','AMGN','TRV','MSFT'])]
+    df = df[df.tic.isin(['ADS.DE', 'ALV.DE', 'BAS.DE', 'BAYN.DE', 'BMW.DE', 'CON.DE', 'DBK.DE', 'DTE.DE', 'EOAN.DE', 'FME.DE', 'VOW3.DE'])]
+    TRAIN_START_DATE = '2010-01-01'
+    TRAIN_END_DATE = '2019-12-30'
+
+    VALIDATION_START_DATE = '2020-01-01'
+    VALIDATION_END_DATE = '2020-12-30'
+
+    TEST_START_DATE = '2021-01-01'
+    TEST_END_DATE = '2024-01-01'
     INDICATORS = [
         "macd",
         "rsi_30",
     ]
 
     fe = FeatureEngineer(use_technical_indicator=True,
-                         tech_indicator_list=INDICATORS,
-                         use_turbulence=False,
-                         user_defined_feature=True)
+                        tech_indicator_list=INDICATORS,
+                        use_turbulence=False,
+                        user_defined_feature=True)
 
-    processed_dax = fe.preprocess_data(
-        df.query(f'date>"{start_date_year_before}"'))
-    cleaned_data = processed_dax.copy()
-    cleaned_data = add_volatility(cleaned_data)
+    processed_prcies = fe.preprocess_data(df.query('date>"2000-01-01"'))
+    cleaned_data = processed_prcies.copy()
     cleaned_data = cleaned_data.fillna(0)
     cleaned_data = cleaned_data.replace(np.inf, 0)
-    cleaned_data['std_return_60'] = cleaned_data.groupby('tic')['log_return'].ewm(span=60, ignore_na=False,
-                                                                                  min_periods=1).std().reset_index(level=0, drop=True)
-    cleaned_data['ewma_std_price_63'] = cleaned_data.groupby('tic')['close'].ewm(span=63, ignore_na=False,
-                                                                                 min_periods=1).std().reset_index(level=0, drop=True)
+    stock_dimension = len(cleaned_data.tic.unique())
+    state_space = 1 + 2*stock_dimension + len(INDICATORS)*stock_dimension
+    # Compute exponentially weighted std of log returns
+    for window in [21, 42, 63]:
+        cleaned_data[f'std_return_{window}'] = cleaned_data.groupby('tic')['log_return'] \
+            .transform(lambda x: x.ewm(span=window, min_periods=10, adjust=False).std())
+    # Compute exponentially weighted std of closing prices for MACD normalization
+    cleaned_data['ewma_std_price_63'] = cleaned_data.groupby('tic')['close'] \
+        .transform(lambda x: x.ewm(span=63, min_periods=10, adjust=False).std())
 
-    cleaned_data['macd_normalized'] = cleaned_data['macd'] / \
+    # Normalize MACD by price volatility
+    cleaned_data['macd_normal'] = cleaned_data['macd'] / \
         cleaned_data['ewma_std_price_63']
-    cleaned_data['macd_std'] = cleaned_data.groupby('tic')['macd_normalized'].ewm(span=252, ignore_na=False,
-                                                                                  min_periods=1).std().reset_index(level=0, drop=True)
 
-    cleaned_data['macd_normal'] = cleaned_data['macd_normalized'] / \
-        cleaned_data['macd_std']
-    cleaned_data['rsi_normal'] = cleaned_data['rsi_30'] / 100
-    cleaned_data['price_lag_5'] = cleaned_data.groupby('tic')['log_return'].rolling(
-        window=5, min_periods=5).sum().reset_index(level=0, drop=True)
-    cleaned_data['price_lag_21'] = cleaned_data.groupby('tic')['log_return'].rolling(
-        window=21, min_periods=21).sum().reset_index(level=0, drop=True)
-    cleaned_data['price_lag_42'] = cleaned_data.groupby('tic')['log_return'].rolling(
-        window=42, min_periods=42).sum().reset_index(level=0, drop=True)
-    cleaned_data['price_lag_63'] = cleaned_data.groupby('tic')['log_return'].rolling(
-        window=63, min_periods=63).sum().reset_index(level=0, drop=True)
-    cleaned_data['price_lag_252'] = cleaned_data.groupby('tic')['log_return'].rolling(
-        window=252, min_periods=252).sum().reset_index(level=0, drop=True)
+    # Rolling cumulative log returns over different periods
+    for window in [21, 42, 63]:
+        cleaned_data[f'return_sum_{window}'] = cleaned_data.groupby('tic')['log_return'] \
+            .transform(lambda x: x.rolling(window=window, min_periods=10).sum())
 
-    cleaned_data['momentum_return_21_normal'] = cleaned_data['price_lag_21'] / \
-        (cleaned_data['std_return_60'] * math.sqrt(252))
-    cleaned_data['momentum_return_42_normal'] = cleaned_data['price_lag_42'] / \
-        (cleaned_data['std_return_60'] * math.sqrt(252))
-    cleaned_data['momentum_return_63_normal'] = cleaned_data['price_lag_63'] / \
-        (cleaned_data['std_return_60'] * math.sqrt(252))
-    cleaned_data['momentum_return_252_normal'] = cleaned_data['price_lag_252'] / \
-        (cleaned_data['std_return_60'] * math.sqrt(252))
+    # Normalize rolling log returns by their respective volatilities
+    for window in [21, 42, 63]:
+        cleaned_data[f'r_{window}'] = cleaned_data[f'return_sum_{window}'] / \
+            cleaned_data['std_return_63']
+    cleaned_data['rsi_30'] = cleaned_data['rsi_30'] / 100
 
-    train_data = data_split(cleaned_data, train_start, train_end)
-    test_data = data_split(cleaned_data, test_start, test_end)
+    TRAIN_START_DATE = '2010-01-01'
+    TRAIN_END_DATE = '2020-12-30'
+
+    VALIDATION_START_DATE = '2021-01-01'
+    VALIDATION_END_DATE = '2021-12-30'
+
+    TEST_START_DATE = '2022-01-01'
+    TEST_END_DATE = '2024-12-30'
+    train_data = data_split(cleaned_data, TRAIN_START_DATE, TRAIN_END_DATE)
+    test_data = data_split(cleaned_data, TEST_START_DATE, TEST_END_DATE)
     validation_data = data_split(
-        cleaned_data, validation_start, validation_end)
+        cleaned_data, VALIDATION_START_DATE, VALIDATION_END_DATE)
     stock_dimension = len(train_data.tic.unique())
-    print(f"Stock Dimension: {stock_dimension}")
+
     return train_data, test_data, validation_data

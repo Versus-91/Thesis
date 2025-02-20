@@ -33,7 +33,7 @@ FLAGS = flags.FLAGS
 FLAGS(sys.argv)
 df_dax = read_csv('./dataset/dax.csv')
 
-df_dow = read_csv('./data/dow.csv')
+df_dow = read_csv('./dataset/dow.csv')
 
 study_path = "./studies/s3"
 
@@ -52,24 +52,24 @@ def objective(trial: optuna.Trial, sharpe_reward=False, commission=0, window_siz
         ['MSFT', 'UNH', 'DIS', 'GS', 'HD', 'V', "AXP", "MCD", "CAT", "AMGN", "TRV"])]
 
     if sharpe_reward:
-        portfolio_optimizer = PortfolioOptimization(
-            transaction_fee=0.00, comission_fee_model=None, vectorize=False, normalize=None,
-            tag="ppo_alternative_state_11_asset", sharp_reward=False, last_weight=False, remove_close=True,
-            add_cash=False, env=PortfolioOptimizationEnv)
+        portfolio_optimizer = PortfolioOptimization(flatten_state=False,
+                                                    transaction_fee=0.001, comission_fee_model=None, vectorize=False, normalize=None,
+                                                    tag="ppo_alternative_state_11_asset", sharp_reward=False, last_weight=False, remove_close=True,
+                                                    add_cash=False, env=PortfolioOptimizationEnv)
     else:
-        portfolio_optimizer = PortfolioOptimization(
-            transaction_fee=0.00, comission_fee_model=None, vectorize=False, normalize=None,
-            tag="ppo_alternative_state_11_asset", sharp_reward=False, last_weight=False, remove_close=True,
-            add_cash=False, env=PortfolioOptimizationEnv)
+        portfolio_optimizer = PortfolioOptimization(flatten_state=False,
+                                                    transaction_fee=0.001, comission_fee_model=None, vectorize=False, normalize=None,
+                                                    tag="ppo_alternative_state_11_asset", sharp_reward=False, last_weight=False, remove_close=True,
+                                                    add_cash=False, env=PortfolioOptimizationEnv)
 
     train_data, test_data, eval_data = data_processor.get_data(df)
     env_train = portfolio_optimizer.create_environment(
-        train_data, ["close", "log_return", "momentum_return_21_normal",
-                     "momentum_return_42_normal", "momentum_return_63_normal", "momentum_return_252_normal", "macd_normal", "rsi_normal"
+        train_data, ["close", "log_return", "r_21", "r_42", "r_63",
+                     "macd_normal", "rsi_30"
                      ], window=window_size)
     env_evaluation = portfolio_optimizer.create_environment(
-        eval_data, ["close", "log_return", "momentum_return_21_normal",
-                    "momentum_return_42_normal", "momentum_return_63_normal", "momentum_return_252_normal", "macd_normal", "rsi_normal"
+        eval_data, ["close", "log_return", "r_21", "r_42", "r_63",
+                    "macd_normal", "rsi_30"
                     ], window=window_size)
 
     path = f"{save_path}/trial_{str(trial.number)}"
@@ -93,7 +93,7 @@ def objective(trial: optuna.Trial, sharpe_reward=False, commission=0, window_siz
         f.write(str(params))
 
     try:
-        model.learn(500_000, callback=eval_callback)
+        model.learn(1000_000, callback=eval_callback)
         env_train.close()
     except (AssertionError, ValueError) as e:
         env_train.close()
