@@ -422,7 +422,7 @@ class PortfolioOptimizationEnv(gymnasium.Env):
             # Define portfolio return
             if self.sharpe_reward:
                 sharpe_ratio = self.differential_sharpe_ratio_estimator.update(
-                    portfolio_return)
+                    pd.Series(self._portfolio_return_memory).ewm(span=252, adjust=False).mean())
                 self._portfolio_sharpe_memory.append(sharpe_ratio)
                 self._reward = sharpe_ratio
             else:

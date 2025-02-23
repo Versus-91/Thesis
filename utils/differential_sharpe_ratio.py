@@ -19,9 +19,6 @@ class DifferentialSharpeRatio:
         self.decay_rate = decay_rate
         self.last_sr = 0
 
-    def _tiny():
-        return np.finfo('float64').eps
-
     def update(self, rt):
         dsr = calculate_dsr(rt, self.last_vt, self.last_wt)
         self.last_vt += self.decay_rate * (rt - self.last_vt)

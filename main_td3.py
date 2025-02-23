@@ -27,45 +27,73 @@ def linear_schedule(initial_value):
     return scheduler
 
 
-TRAIN_START_DATE = '2010-01-01'
-TRAIN_END_DATE = '2020-12-30'
+if __name__ == "__main__":
+    from argparse import ArgumentParser
+    try:
+        parser = ArgumentParser()
+        parser.add_argument("--sharpe_reward")
+        parser.add_argument("activation_function")
+        args = parser.parse_args()
+        use_sharpe_reward = bool(args.sharpe_reward)
+        af = str(args.activation_function)
+    except:
+        use_sharpe_reward = False
+        af = 'silu'
+        print('An exception occurred')
 
-VALIDATION_START_DATE = '2021-01-01'
-VALIDATION_END_DATE = '2021-12-30'
+    TRAIN_START_DATE = '2010-01-01'
+    TRAIN_END_DATE = '2020-12-30'
 
-TEST_START_DATE = '2022-01-01'
-TEST_END_DATE = '2024-12-30'
-with open('./data/dow_processed.pkl', 'rb') as file:
-    cleaned_data = pickle.load(file)
+    VALIDATION_START_DATE = '2021-01-01'
+    VALIDATION_END_DATE = '2021-12-30'
 
-cleaned_data = cleaned_data.fillna(0)
-train_data = data_split(cleaned_data, TRAIN_START_DATE, TRAIN_END_DATE)
-test_data = data_split(cleaned_data, TEST_START_DATE, TEST_END_DATE)
-validation_data = data_split(
-    cleaned_data, VALIDATION_START_DATE, VALIDATION_END_DATE)
-stock_dimension = len(train_data.tic.unique())
+    TEST_START_DATE = '2022-01-01'
+    TEST_END_DATE = '2024-12-30'
+    with open('./data/dow_normal_processed.pkl', 'rb') as file:
+        cleaned_data = pickle.load(file)
 
+    cleaned_data = cleaned_data.fillna(0)
+    train_data = data_split(cleaned_data, TRAIN_START_DATE, TRAIN_END_DATE)
+    test_data = data_split(cleaned_data, TEST_START_DATE, TEST_END_DATE)
+    validation_data = data_split(
+        cleaned_data, VALIDATION_START_DATE, VALIDATION_END_DATE)
+    stock_dimension = len(train_data.tic.unique())
+    seed = 42
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    tag = 'td3'
 
-seed = 42
-np.random.seed(seed)
-torch.manual_seed(seed)
+    if use_sharpe_reward:
+        tag += '_sharpe'
+    if af:
+        tag += '_'+af
+    if af == 'silu':
+        activ_func = nn.SiLU
+    if af == 'tanh':
+        activ_func = nn.Tanh
+    if af == 'sigmoid':
+        activ_func = nn.Sigmoid
+    print(use_sharpe_reward)
+    print(tag)
 
-optimizer = PortfolioOptimization(
-    transaction_fee=0.001, comission_fee_model=None, flatten_state=False,
-    tag="td3_state_corr_dow_2", sharp_reward=False, last_weight=False, remove_close=True,
-    add_cash=False, env=PortfolioOptimizationEnv
-)
-optimizer.train_model(train_data,
-                      validation_data,
-                      features=["close", "log_return", "r_21", "r_42", "r_63",
-                                "macd", "rsi_30"
-                                ],
-                      model_name="td3",
-                      args={'gamma': 0.90, 'learning_rate': 1e-4,
-                            "buffer_size": 300_000, "batch_size": 124,
-                            "action_noise": "normal"},
-                      window_size=21,
-                      policy_kwargs=dict(
-                          activation_fn=nn.SiLU,
-                      ),
-                      iterations=2000_000)
+    print(af)
+
+    optimizer = PortfolioOptimization(
+        transaction_fee=0.001, comission_fee_model=None, flatten_state=False,
+        tag=tag, sharp_reward=use_sharpe_reward, last_weight=False, remove_close=True,
+        add_cash=False, env=PortfolioOptimizationEnv
+    )
+    optimizer.train_model(train_data,
+                          validation_data,
+                          features=["close", "log_return", "r_21", "r_42", "r_63",
+                                    "macd", "rsi_30"
+                                    ],
+                          model_name="td3",
+                          args={'gamma': 0.90, 'learning_rate': 1e-4,
+                                "buffer_size": 100_000, "batch_size": 124,
+                                "action_noise": "normal"},
+                          window_size=21,
+                          policy_kwargs=dict(
+                              activation_fn=activ_func,
+                          ),
+                          iterations=1000_000)
