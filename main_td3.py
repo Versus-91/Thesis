@@ -86,13 +86,13 @@ if __name__ == "__main__":
                                     "macd", "rsi_30", 'corr_list'
                                     ],
                           model_name="td3",
-                          args={'gamma': 0.80, 'learning_rate': 1e-4,
-                                "buffer_size": 100_000, "batch_size": 64,
+                          args={'gamma': 0.90, 'learning_rate': 1e-4,
+                                "buffer_size": 100_000, "batch_size": 128, 'action_noise': 'normal'
                                 },
-                          window_size=42,
+                          window_size=21,
                           policy_kwargs=dict(
                               activation_fn=activ_func,
                               net_arch=dict(
-                                  pi=[64, 64], qf=[64, 64])
+                                  pi=[64, 32], qf=[64, 32])
                           ),
                           iterations=1000_000)

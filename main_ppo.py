@@ -16,6 +16,7 @@ import numpy as np
 import scienceplots
 from utils.plotting_helpers import plot_mvo_weights
 import utils.mean_variance_optimization as mvo
+from sklearn.preprocessing import MinMaxScaler
 
 warnings.filterwarnings("ignore")
 
@@ -30,10 +31,10 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
     try:
         parser = ArgumentParser()
-        parser.add_argument("--sharpe_reward")
+        parser.add_argument("--sharpe-reward", action="store_true")
         parser.add_argument("activation_function")
         args = parser.parse_args()
-        use_sharpe_reward = bool(args.sharpe_reward)
+        use_sharpe_reward = args.sharpe_reward
         af = str(args.activation_function)
     except:
         use_sharpe_reward = False
@@ -60,7 +61,7 @@ if __name__ == "__main__":
     seed = 42
     np.random.seed(seed)
     torch.manual_seed(seed)
-    tag = 'ppo'
+    tag = 'rppo_dow'
 
     if use_sharpe_reward:
         tag += '_sharpe'
@@ -72,6 +73,8 @@ if __name__ == "__main__":
         activ_func = nn.Tanh
     if af == 'sigmoid':
         activ_func = nn.Sigmoid
+    if af == 'leaky_relu':
+        activ_func = nn.LeakyReLU
     TRAIN_START_DATE = '2010-01-01'
     TRAIN_END_DATE = '2020-12-30'
 
@@ -80,7 +83,7 @@ if __name__ == "__main__":
 
     TEST_START_DATE = '2022-01-01'
     TEST_END_DATE = '2024-12-30'
-    with open('./data/dow_normal_processed.pkl', 'rb') as file:
+    with open('./data/dow_processed.pkl', 'rb') as file:
         cleaned_data = pickle.load(file)
 
     cleaned_data = cleaned_data.fillna(0)
@@ -95,21 +98,24 @@ if __name__ == "__main__":
     torch.manual_seed(seed)
 
     optimizer = PortfolioOptimization(
-        transaction_fee=0.001, comission_fee_model=None, flatten_state=False,
+        transaction_fee=0.001, comission_fee_model=None, flatten_state=True,
         tag=tag, sharp_reward=use_sharpe_reward, last_weight=False, remove_close=True,
         add_cash=False, env=PortfolioOptimizationEnv
     )
     optimizer.train_model(train_data,
                           validation_data,
                           features=["close", "log_return", "r_21", "r_42", "r_63",
-                                    "macd", "rsi_30"
+                                    "macd", "rsi_30", 'corr_list'
                                     ],
-                          model_name="ppo",
-                          args={"n_steps":  1024, "batch_size": 128, 'learning_rate': 1e-4,
-                                'gamma': 0.90, "gae_lambda": 0.9},
+                          policy_network="MlpLstmPolicy",
+                          model_name="RecurrentPPO",
+                          args={"n_steps":  512, "batch_size": 128, 'learning_rate': 1e-4,
+                                'gamma': 0.90, "gae_lambda": 0.9, "n_epochs": 5, "ent_coef": 0.03},
                           window_size=21,
                           policy_kwargs=dict(
                               log_std_init=True,
-                              activation_fn=nn.SiLU,
+                              activation_fn=activ_func,
+                              net_arch=dict(
+                                  pi=[64, 32], vf=[64, 32])
                           ),
                           iterations=1000_000)

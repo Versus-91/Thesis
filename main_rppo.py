@@ -105,13 +105,13 @@ if __name__ == "__main__":
     optimizer.train_model(train_data,
                           validation_data,
                           features=["close", "log_return", "r_21", "r_42", "r_63",
-                                    "rsi_30", "macd", "corr_list"
+                                    "macd", "rsi_30", 'corr_list'
                                     ],
                           policy_network="MlpLstmPolicy",
                           model_name="RecurrentPPO",
                           args={"n_steps":  256, "batch_size": 64, 'learning_rate': 1e-4,
-                                'gamma': 0.90, "gae_lambda": 0.9, "n_epochs": 4, "ent_coef": 0.01},
-                          window_size=63,
+                                'gamma': 0.90, "gae_lambda": 0.9, "n_epochs": 5, "ent_coef": 0.03},
+                          window_size=21,
                           policy_kwargs=dict(
                               activation_fn=activ_func,
                               net_arch=dict(
