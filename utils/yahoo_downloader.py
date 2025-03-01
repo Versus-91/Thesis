@@ -49,7 +49,7 @@ class YahooDownloader:
         num_failures = 0
         for tic in self.ticker_list:
             temp_df = yf.download(
-                tic, start=self.start_date, end=self.end_date, proxy=proxy
+                tic, start=self.start_date, end=self.end_date, proxy=proxy, auto_adjust=False, multi_level_index=False,
             )
             temp_df["tic"] = tic
             if len(temp_df) > 0:
@@ -62,21 +62,10 @@ class YahooDownloader:
         # reset the index, we want to use numbers as index instead of dates
         data_df = data_df.reset_index()
         try:
-            # convert the column names to standardized names
-            data_df.columns = [
-                "date",
-                "open",
-                "high",
-                "low",
-                "close",
-                "adjcp",
-                "volume",
-                "tic",
-            ]
-            # use adjusted close price instead of close price
-            data_df["close"] = data_df["adjcp"]
+            data_df.columns = [x.lower() for x in data_df.columns]
+            data_df["close"] = data_df["adj close"]
             # drop the adjusted close price column
-            data_df = data_df.drop(labels="adjcp", axis=1)
+            data_df = data_df.drop(labels="adj close", axis=1)
         except NotImplementedError:
             print("the features are not supported currently")
         # create day of the week column (monday = 0)

@@ -6,6 +6,7 @@ from stable_baselines3 import DDPG
 from stable_baselines3 import A2C
 from sb3_contrib import RecurrentPPO
 from environements.portfolio_optimization_env import PortfolioOptimizationEnv
+from utils.helpers import data_split
 from utils.portfolio_trainer import PortfolioOptimization
 from utils.optuna.trial_eval_callback import TrialEvalCallback
 from utils.optuna.ppo import sample_ppo_params
@@ -45,7 +46,22 @@ def objective(trial: optuna.Trial, sharpe_reward=False, commission=0, window_siz
 
     # step_mul = trial.suggest_categorical("step_mul", [4, 8, 16, 32, 64])
     # env_kwargs = {"step_mul": step_mul}
+    TRAIN_START_DATE = '2010-01-01'
+    TRAIN_END_DATE = '2020-12-30'
 
+    VALIDATION_START_DATE = '2021-01-01'
+    VALIDATION_END_DATE = '2021-12-30'
+
+    TEST_START_DATE = '2022-01-01'
+    TEST_END_DATE = '2024-12-30'
+    with open('./data/dow_normal_processed.pkl', 'rb') as file:
+        cleaned_data = pkl.load(file)
+
+    cleaned_data = cleaned_data.fillna(0)
+    train_data = data_split(cleaned_data, TRAIN_START_DATE, TRAIN_END_DATE)
+    test_data = data_split(cleaned_data, TEST_START_DATE, TEST_END_DATE)
+    validation_data = data_split(
+        cleaned_data, VALIDATION_START_DATE, VALIDATION_END_DATE)
     sampled_hyperparams, lr = sample_ppo_params(trial)
     df = df_dow.copy()
     df = df_dow[df_dow.tic.isin(
@@ -62,15 +78,14 @@ def objective(trial: optuna.Trial, sharpe_reward=False, commission=0, window_siz
                                                     tag="ppo_alternative_state_11_asset", sharp_reward=False, last_weight=False, remove_close=True,
                                                     add_cash=False, env=PortfolioOptimizationEnv)
 
-    train_data, test_data, eval_data = data_processor.get_data(df)
     env_train = portfolio_optimizer.create_environment(
         train_data, ["close", "log_return", "r_21", "r_42", "r_63",
                      "macd_normal", "rsi_30"
                      ], window=window_size)
     env_evaluation = portfolio_optimizer.create_environment(
-        eval_data, ["close", "log_return", "r_21", "r_42", "r_63",
-                    "macd_normal", "rsi_30"
-                    ], window=window_size)
+        validation_data, ["close", "log_return", "r_21", "r_42", "r_63",
+                          "macd_normal", "rsi_30"
+                          ], window=window_size)
 
     path = f"{save_path}/trial_{str(trial.number)}"
     os.makedirs(path, exist_ok=True)

@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 matplotlib.use('Agg')
 
 
-def plot_weights(weights, dates, tics, add_cash=True):
+def plot_weights(weights, dates, tics, add_cash=True, name=''):
     w = pd.DataFrame(weights.tolist())
     columns = tics.copy()
     columns.append('date')
@@ -35,7 +35,7 @@ def plot_weights(weights, dates, tics, add_cash=True):
         # Adjust ncol for horizontal legend
         ax_legend.legend(handles, labels, loc='center', ncol=1)
         plt.tight_layout()
-        plt.savefig('./figures/'+str(random.randint(0, 1_000_000))+'.png')
+        plt.savefig('./figures/'+str(name)+'.png')
 
 
 plt.rcdefaults()
@@ -74,7 +74,7 @@ def plot_mvo_weights(mvo_result, test_data, include_variance=True, figsize=(11, 
         # Variance plot (optional)
         if include_variance:
             ax_below.plot(w['date'], mvo_result['variance'],
-                        label='Portfolio Variance')
+                          label='Portfolio Variance')
             ax_below.set_xlim(w.date.min(), w.date.max())
             ax_below.set_ylabel('Variance')
             ax_below.tick_params(axis='x', rotation=30)

@@ -31,11 +31,11 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
     try:
         parser = ArgumentParser()
-        parser.add_argument("--sharpe_reward")
+        parser.add_argument("--sharpe-reward", action="store_true")
         parser.add_argument("activation_function")
         args = parser.parse_args()
-        use_sharpe_reward = bool(args.sharpe_reward)
-        af = str(args.activation_function)
+        use_sharpe_reward = args.sharpe_reward
+        af = args.activation_function
     except:
         use_sharpe_reward = False
         af = 'silu'
@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
     TEST_START_DATE = '2022-01-01'
     TEST_END_DATE = '2024-12-30'
-    with open('./data/dow_normal_processed.pkl', 'rb') as file:
+    with open('./data/dow_processed.pkl', 'rb') as file:
         cleaned_data = pickle.load(file)
 
     cleaned_data = cleaned_data.fillna(0)
@@ -73,27 +73,26 @@ if __name__ == "__main__":
         activ_func = nn.Tanh
     if af == 'sigmoid':
         activ_func = nn.Sigmoid
-    print(use_sharpe_reward)
-    print(tag)
-
-    print(af)
-
+    if af == 'leaky_relu':
+        activ_func = nn.LeakyReLU
     optimizer = PortfolioOptimization(
-        transaction_fee=0.001, comission_fee_model=None, flatten_state=False,
+        transaction_fee=0.001, comission_fee_model=None, flatten_state=True,
         tag=tag, sharp_reward=use_sharpe_reward, last_weight=False, remove_close=True,
         add_cash=False, env=PortfolioOptimizationEnv
     )
     optimizer.train_model(train_data,
                           validation_data,
                           features=["close", "log_return", "r_21", "r_42", "r_63",
-                                    "macd", "rsi_30"
+                                    "macd", "rsi_30", 'corr_list'
                                     ],
                           model_name="td3",
-                          args={'gamma': 0.90, 'learning_rate': 1e-4,
-                                "buffer_size": 100_000, "batch_size": 124,
-                                "action_noise": "normal"},
-                          window_size=21,
+                          args={'gamma': 0.80, 'learning_rate': 1e-4,
+                                "buffer_size": 100_000, "batch_size": 64,
+                                },
+                          window_size=42,
                           policy_kwargs=dict(
                               activation_fn=activ_func,
+                              net_arch=dict(
+                                  pi=[64, 64], qf=[64, 64])
                           ),
                           iterations=1000_000)

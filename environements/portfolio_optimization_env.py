@@ -14,9 +14,31 @@ import numpy as np
 import pandas as pd
 from gymnasium import spaces
 from gymnasium.utils import seeding
-from utils.differential_sharpe_ratio import DifferentialSharpeRatio
 import utils.helpers as helpers
 matplotlib.use("Agg")
+
+
+def calculate_dsr(rt, last_vt, last_wt):
+    delta_a_t = rt - last_vt
+    delta_b_t = rt**2 - last_wt
+    return (last_wt * delta_a_t - (0.5 * last_vt * delta_b_t)) / ((last_wt - last_vt**2)**(3/2) + np.finfo('float64').eps)
+
+
+class DifferentialSharpeRatio:
+    def __init__(self, decay_rate=0.003):
+        self.a_t = 0
+        self.b_t = 0
+        self.decay_rate = decay_rate
+        self.last_sr = 0
+
+    def update(self, rt):
+        dsr = calculate_dsr(rt, self.a_t, self.b_t)
+        self.a_t += self.decay_rate * (rt - self.a_t)
+        self.b_t += self.decay_rate * (rt**2 - self.b_t)
+
+        self.last_sr += self.decay_rate * dsr
+        return dsr
+
 
 try:
     import quantstats as qs
@@ -422,7 +444,7 @@ class PortfolioOptimizationEnv(gymnasium.Env):
             # Define portfolio return
             if self.sharpe_reward:
                 sharpe_ratio = self.differential_sharpe_ratio_estimator.update(
-                    pd.Series(self._portfolio_return_memory).ewm(span=252, adjust=False).mean())
+                    portfolio_return)
                 self._portfolio_sharpe_memory.append(sharpe_ratio)
                 self._reward = sharpe_ratio
             else:

@@ -8,6 +8,7 @@ from utils.helpers import data_split
 from utils.model_helpers import DRL_prediction
 from stable_baselines3.common.vec_env import DummyVecEnv
 from datetime import datetime, timedelta
+from stable_baselines3.common.callbacks import StopTrainingOnNoModelImprovement
 
 
 class PortfolioOptimization:
@@ -110,15 +111,17 @@ class PortfolioOptimization:
             save_path="./data/"+model_name+"_" + path_post_fix,
             name_prefix=model_name,
         )
-
+        stop_callback = StopTrainingOnNoModelImprovement(
+            max_no_improvement_evals=50, min_evals=100, verbose=1)
         eval_callback = EvalCallback(
             evaluation_environment,
             best_model_save_path="./data/"+model_name+"_"+path_post_fix + "best",
             log_path="./tensorboard_log/" + path_post_fix,
-            eval_freq=5000,
+            eval_freq=2500,
             deterministic=True,
-            n_eval_episodes=1,
+            n_eval_episodes=3,
             render=False,
+            callback_after_eval=stop_callback
         )
         model = agent.train_model(model=model_agent,
                                   tb_log_name=model_name,

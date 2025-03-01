@@ -39,7 +39,7 @@ def mvo_data(data, returns_model='ema_historical_return', risk_model='sample_cov
     return df
 
 
-def mean_variance_optimization(test_data, solver='OSQP', window=1, commission_fee=0, objective='min_variance'):
+def mean_variance_optimization(test_data, solver='OSQP', window=1, commission_fee=0, objective='min_variance', risk_free_rate=0):
     z = test_data.copy()
     z.sort_values(by=['date', 'tic'])
     environment = PortfolioOptimizationEnv(
@@ -68,7 +68,7 @@ def mean_variance_optimization(test_data, solver='OSQP', window=1, commission_fe
             weights = ef.clean_weights()
 
         else:
-            ef.max_sharpe()
+            ef.max_sharpe(risk_free_rate=risk_free_rate)
             weights = ef.clean_weights()
         weights = list(weights.values())
         weights_list.append(weights)
