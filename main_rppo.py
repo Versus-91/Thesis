@@ -98,20 +98,56 @@ if __name__ == "__main__":
     torch.manual_seed(seed)
 
     optimizer = PortfolioOptimization(
-        transaction_fee=0.002, comission_fee_model=None, flatten_state=True, decay_rate=0.002,
+        transaction_fee=0.002, comission_fee_model=None, flatten_state=False, decay_rate=0.002,
         tag=tag, sharp_reward=use_sharpe_reward, last_weight=False, remove_close=True,
         add_cash=False, env=PortfolioOptimizationEnv
     )
+    # optimizer.train_model(train_data,
+    #                       validation_data,
+    #                       features=[
+    #                           "close", "logreturn", "r_21", "r_42", "r_63",
+    #                           "rsi_30", "corr_list"
+    #                       ],
+    #                       policy_network="MlpLstmPolicy",
+    #                       model_name="RecurrentPPO",
+    #                       args={"n_steps":  256, "batch_size": 128, 'learning_rate': 1e-4,
+    #                             'gamma': 0.90, "gae_lambda": 0.9, "n_epochs": 5, "ent_coef": 0.01},
+    #                       window_size=21,
+    #                       policy_kwargs=dict(
+    #                           activation_fn=activ_func,
+    #                           net_arch=dict(
+    #                               pi=[64, 32], vf=[64, 32])
+    #                       ),
+    #                       iterations=1000_000)
+
+    # optimizer.train_model(train_data,
+    #                       validation_data,
+    #                       features=[
+    #                           "close", "logreturn", "r_21", "r_42", "r_63",
+    #                           "rsi_30", "corr_list",'macd_normal'
+    #                       ],
+    #                       policy_network="MlpLstmPolicy",
+    #                       model_name="RecurrentPPO",
+    #                       args={"n_steps":  256, "batch_size": 128, 'learning_rate': 1e-4,
+    #                             'gamma': 0.90, "gae_lambda": 0.9, "n_epochs": 5, "ent_coef": 0.01},
+    #                       window_size=21,
+    #                       policy_kwargs=dict(
+    #                           activation_fn=activ_func,
+    #                           net_arch=dict(
+    #                               pi=[64, 32], vf=[64, 32])
+    #                       ),
+    #                       iterations=1000_000)
     optimizer.train_model(train_data,
                           validation_data,
-                          features=["close", "logreturn",
-                                    "macd_normal", "rsi_30","corr_list"
-                                    ],
+                          features=[
+                              "close", "logreturn", "r_21", "r_42", "r_63",
+                              "rsi_30", "macd_normal"
+                          ],
                           policy_network="MlpLstmPolicy",
                           model_name="RecurrentPPO",
                           args={"n_steps":  256, "batch_size": 128, 'learning_rate': 1e-4,
                                 'gamma': 0.90, "gae_lambda": 0.9, "n_epochs": 5, "ent_coef": 0.01},
-                          window_size=63,
+                          window_size=21,
                           policy_kwargs=dict(
                               activation_fn=activ_func,
                               net_arch=dict(
