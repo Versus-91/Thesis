@@ -147,7 +147,10 @@ class FeatureEngineer:
         """
         # clean data
         df = self.clean_data(df)
-
+        # add user defined feature
+        if self.user_defined_feature:
+            df = self.add_user_defined_feature(df)
+            print("Successfully added user defined features")
         # add technical indicators using stockstats
         if self.use_technical_indicator:
             df = self.add_technical_indicator(df)
@@ -162,11 +165,6 @@ class FeatureEngineer:
         if self.use_turbulence:
             df = self.add_turbulence(df)
             print("Successfully added turbulence index")
-
-        # add user defined feature
-        if self.user_defined_feature:
-            df = self.add_user_defined_feature(df)
-            print("Successfully added user defined features")
 
         # fill the missing values at the beginning and the end
         df = df.ffill().bfill()
@@ -248,7 +246,7 @@ class FeatureEngineer:
         """
         df = data.copy()
         df["return"] = df.groupby('tic')['close'].pct_change()
-        df["log_return"] = np.log(
+        df["logreturn"] = np.log(
             df['close'] / df.groupby('tic')['close'].shift(1))
 
         return df
