@@ -76,23 +76,23 @@ if __name__ == "__main__":
     if af == 'leaky_relu':
         activ_func = nn.LeakyReLU
     optimizer = PortfolioOptimization(
-        transaction_fee=0.001, comission_fee_model=None, flatten_state=False,
+        transaction_fee=0.001, comission_fee_model=None, flatten_state=True,
         tag=tag, sharp_reward=use_sharpe_reward, last_weight=False, remove_close=True,
         add_cash=False, env=PortfolioOptimizationEnv
     )
     optimizer.train_model(train_data,
                           validation_data,
-                          features=["close", "log_return", "r_21", "r_42", "r_63",
-                                    "macd", "rsi_30",
+                          features=["close", "logreturn", "r_21", "r_42", "r_63",
+                                    "macd", "rsi_30", 'corr_list'
                                     ],
                           model_name="td3",
-                          args={'gamma': 0.90, 'learning_rate': 1e-4,
-                                "buffer_size": 100_000, "batch_size": 128,
+                          args={'gamma': 0.90, 'learning_rate': linear_schedule(1e-4),
+                                "buffer_size": 50_000, "batch_size": 128,
                                 },
                           window_size=42,
                           policy_kwargs=dict(
                               activation_fn=activ_func,
                               net_arch=dict(
-                                  pi=[64, 64], qf=[64, 64])
+                                  pi=[64, 32], qf=[64, 32])
                           ),
                           iterations=1000_000)
